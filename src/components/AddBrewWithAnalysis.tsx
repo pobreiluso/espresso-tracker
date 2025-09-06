@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { Camera, Upload, Coffee, Clock, Settings, Send, X } from 'lucide-react'
 import { getOpenBags } from '@/lib/queries'
 import { BagWithCoffeeAndRoaster, CreateBrewWithAnalysisForm, BrewAnalysis } from '@/types'
 import { supabase } from '@/lib/supabase'
+import { useSettings } from '@/lib/useSettings'
 
 interface AddBrewWithAnalysisProps {
   onClose: () => void
@@ -12,14 +13,15 @@ interface AddBrewWithAnalysisProps {
 }
 
 export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisProps) {
+  const { settings } = useSettings()
   const [step, setStep] = useState<'form' | 'photo' | 'analyzing' | 'results'>('form')
   const [openBags, setOpenBags] = useState<BagWithCoffeeAndRoaster[]>([])
   const [selectedBagId, setSelectedBagId] = useState<string>('')
-  const [grindSetting, setGrindSetting] = useState<number | ''>('')
+  const [grindSetting, setGrindSetting] = useState<number | ''>(settings.defaultGrindSetting || '')
   const [extractionTime, setExtractionTime] = useState<number | ''>('')
-  const [doseGrams, setDoseGrams] = useState<number | ''>('')
+  const [doseGrams, setDoseGrams] = useState<number | ''>(settings.defaultDoseG || '')
   const [yieldGrams, setYieldGrams] = useState<number | ''>('')
-  const [waterTemp, setWaterTemp] = useState<number | ''>('')
+  const [waterTemp, setWaterTemp] = useState<number | ''>(settings.defaultWaterTempC || '')
   const [rating, setRating] = useState<number>(5)
   const [notes, setNotes] = useState<string>('')
   const [photo, setPhoto] = useState<File | null>(null)
@@ -109,7 +111,8 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
         visual_score: analysis.quality_assessment.overall_score,
         confidence_score: analysis.confidence_overall,
         has_photo: true,
-        has_ai_analysis: true
+        has_ai_analysis: true,
+        user_id: '00000000-0000-0000-0000-000000000000' // Dummy user ID for dev
       }
 
       const { error: insertError } = await supabase
@@ -300,7 +303,6 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
                   ref={cameraInputRef}
                   type="file"
                   accept="image/*"
-                  capture="environment"
                   onChange={handlePhotoCapture}
                   className="hidden"
                 />

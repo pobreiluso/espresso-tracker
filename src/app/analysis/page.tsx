@@ -131,7 +131,7 @@ export default function AnalysisPage() {
                           {brew.bag.coffee.roaster.name} - {brew.bag.coffee.name}
                         </h3>
                         <p className="text-subtext1 text-sm">
-                          {new Date(brew.brew_date).toLocaleDateString('es-ES')}
+                          {brew.brew_date ? new Date(brew.brew_date).toLocaleDateString('es-ES') : 'Sin fecha'}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">

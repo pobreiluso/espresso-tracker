@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/lib/auth'
-import { Home, Coffee, Beaker, Settings, LogOut, ChevronDown, ChevronRight, Building, Bean, TrendingUp } from 'lucide-react'
+import { Home, Coffee, Beaker, Settings, LogOut, ChevronDown, ChevronRight, Building, Bean, TrendingUp, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
 const navigation = [
@@ -11,6 +11,7 @@ const navigation = [
   { name: 'Bags', href: '/bags', icon: Coffee },
   { name: 'Brews', href: '/brews', icon: Beaker },
   { name: 'Analysis', href: '/analysis', icon: TrendingUp },
+  { name: 'Manage', href: '/manage', icon: Trash2 },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
@@ -34,23 +35,36 @@ export default function Navigation() {
   return (
     <>
       {/* Mobile navigation */}
-      <nav className="fixed bottom-0 left-0 right-0 bg-surface0 border-t border-overlay0 md:hidden z-50">
-        <div className="flex items-center justify-around py-2">
-          {navigation.slice(0, 5).map((item) => {
+      <nav className="fixed bottom-0 left-0 right-0 bg-surface0/95 backdrop-blur-sm border-t border-surface1 md:hidden z-50">
+        <div className="flex items-center justify-around py-1">
+          {navigation.slice(0, 6).map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
+            
+            // Translate names to Spanish
+            const spanishNames: Record<string, string> = {
+              'Dashboard': 'Inicio',
+              'Bags': 'Bolsas',
+              'Brews': 'Cafés',
+              'Analysis': 'Análisis',
+              'Manage': 'Gestionar',
+              'Settings': 'Config'
+            }
+            
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex flex-col items-center py-2 px-2 rounded-lg transition-colors ${
+                className={`flex flex-col items-center py-2 px-1 rounded-lg transition-all duration-200 min-w-0 ${
                   isActive
-                    ? 'text-primary bg-surface1'
+                    ? 'text-peach bg-peach/10'
                     : 'text-subtext0 hover:text-text hover:bg-surface1'
                 }`}
               >
-                <Icon className="w-5 h-5 mb-1" />
-                <span className="text-xs">{item.name}</span>
+                <Icon className={`w-5 h-5 mb-0.5 transition-transform ${isActive ? 'scale-110' : ''}`} />
+                <span className="text-[10px] font-medium leading-tight text-center">
+                  {spanishNames[item.name] || item.name}
+                </span>
               </Link>
             )
           })}

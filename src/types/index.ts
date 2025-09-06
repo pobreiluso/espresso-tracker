@@ -36,6 +36,20 @@ export type BagWithCoffeeAndRoaster = Bag & {
 
 export type BrewWithBagAndCoffee = Brew & {
   bag: BagWithCoffeeAndRoaster
+  // AI Analysis fields (optional since they may not exist on all brews)
+  ai_analysis?: any | null
+  extraction_quality?: string | null
+  brewing_method_detected?: string | null
+  visual_score?: number | null
+  confidence_score?: number | null
+  has_ai_analysis?: boolean | null
+  extraction_time_seconds?: number | null
+  dose_grams?: number | null
+  yield_grams?: number | null
+  water_temp_celsius?: number | null
+  estimated_volume_ml?: number | null
+  photo_url?: string | null
+  analysis_timestamp?: string | null
 }
 
 // Enums
