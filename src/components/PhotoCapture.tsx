@@ -25,53 +25,42 @@ export default function PhotoCapture({ onPhotoTaken, onCancel }: PhotoCapturePro
         throw new Error('getUserMedia not supported')
       }
 
-      let constraints = {
+      // Mobile-optimized constraints
+      const constraints = {
         video: { 
-          facingMode: 'environment', // Try back camera first
-          width: { ideal: 1280, max: 1920 },
-          height: { ideal: 720, max: 1080 }
-        }
+          facingMode: 'environment', // Prefer back camera for mobile
+          width: { ideal: 1280, min: 640, max: 1920 },
+          height: { ideal: 720, min: 480, max: 1080 }
+        },
+        audio: false
       }
 
-      let stream: MediaStream
-      
-      try {
-        // First attempt with back camera
-        stream = await navigator.mediaDevices.getUserMedia(constraints)
-      } catch (backCameraError) {
-        console.warn('Back camera not available, trying front camera:', backCameraError)
-        
-        // Fallback to front camera
-        constraints = {
-          video: { 
-            facingMode: 'user',
-            width: { ideal: 1280, max: 1920 },
-            height: { ideal: 720, max: 1080 }
-          }
-        }
-        
-        try {
-          stream = await navigator.mediaDevices.getUserMedia(constraints)
-        } catch (frontCameraError) {
-          console.warn('Front camera not available, trying any camera:', frontCameraError)
-          
-          // Final fallback - any camera
-          stream = await navigator.mediaDevices.getUserMedia({ video: true })
-        }
-      }
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
 
       if (videoRef.current) {
         videoRef.current.srcObject = stream
-        setCameraActive(true)
         
-        // Ensure video starts playing
-        videoRef.current.onloadedmetadata = () => {
+        // Mobile-specific video setup
+        videoRef.current.setAttribute('playsinline', 'true')
+        videoRef.current.setAttribute('webkit-playsinline', 'true')
+        videoRef.current.muted = true
+        
+        // Wait for video to be ready before setting camera active
+        await new Promise((resolve) => {
           if (videoRef.current) {
-            videoRef.current.play().catch(playError => {
-              console.error('Error playing video:', playError)
-            })
+            videoRef.current.onloadedmetadata = () => {
+              if (videoRef.current) {
+                videoRef.current.play().then(() => {
+                  setCameraActive(true)
+                  resolve(true)
+                }).catch(playError => {
+                  console.error('Error playing video:', playError)
+                  resolve(true)
+                })
+              }
+            }
           }
-        }
+        })
       }
     } catch (error) {
       console.error('Error accessing camera:', error)
@@ -150,49 +139,60 @@ export default function PhotoCapture({ onPhotoTaken, onCancel }: PhotoCapturePro
       {/* Content */}
       <div className="flex-1 flex flex-col">
         {cameraActive ? (
-          <div className="flex-1 relative">
+          <div className="flex-1 relative bg-black">
             <video 
               ref={videoRef}
               autoPlay
               playsInline
+              muted
               className="w-full h-full object-cover"
+              style={{ 
+                transform: 'scaleX(-1)', // Mirror for better user experience
+                minHeight: '60vh' // Ensure minimum height on mobile
+              }}
             />
-            {/* Camera controls */}
-            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center space-x-8">
-              {/* Gallery access button */}
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                className="w-12 h-12 bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-sm"
-              >
-                <Upload className="w-6 h-6" />
-              </button>
+            
+            {/* Mobile-optimized camera controls */}
+            <div className="absolute bottom-0 left-0 right-0 bg-black/80 backdrop-blur-sm p-6">
+              <div className="flex items-center justify-center space-x-8">
+                {/* Gallery access button */}
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-16 h-16 bg-white/20 text-white rounded-full flex items-center justify-center backdrop-blur-sm border-2 border-white/30 active:scale-95 transition-transform"
+                >
+                  <Upload className="w-8 h-8" />
+                </button>
+                
+                {/* Capture button */}
+                <button
+                  onClick={takePhoto}
+                  className="w-20 h-20 bg-white rounded-full border-4 border-white shadow-lg flex items-center justify-center active:scale-95 transition-transform"
+                >
+                  <div className="w-16 h-16 bg-red-500 rounded-full" />
+                </button>
+                
+                {/* Switch camera button */}
+                <button
+                  onClick={stopCamera}
+                  className="w-16 h-16 bg-white/20 text-white rounded-full flex items-center justify-center backdrop-blur-sm border-2 border-white/30 active:scale-95 transition-transform"
+                >
+                  <X className="w-8 h-8" />
+                </button>
+              </div>
               
-              {/* Capture button */}
-              <button
-                onClick={takePhoto}
-                className="w-20 h-20 bg-white rounded-full border-4 border-primary shadow-lg flex items-center justify-center active:scale-95 transition-transform"
-              >
-                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
-                  <Camera className="w-8 h-8 text-white" />
-                </div>
-              </button>
-              
-              {/* Flash/settings placeholder */}
-              <div className="w-12 h-12"></div>
+              <p className="text-white text-center mt-4 text-sm opacity-80">
+                Centra la etiqueta del café y toca el botón rojo
+              </p>
             </div>
 
-            {/* Close button */}
-            <button
-              onClick={stopCamera}
-              className="absolute top-4 left-4 bg-black/50 text-white p-3 rounded-full backdrop-blur-sm"
-            >
-              <X className="w-6 h-6" />
-            </button>
-
             {/* Camera overlay guide */}
-            <div className="absolute inset-4 border-2 border-white/30 rounded-lg flex items-center justify-center">
-              <div className="bg-black/50 text-white px-4 py-2 rounded-lg text-sm backdrop-blur-sm">
-                Centra la etiqueta del café en el marco
+            <div className="absolute top-20 left-4 right-4 bottom-32">
+              <div className="w-full h-full border-2 border-white/50 rounded-lg relative">
+                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2">
+                  <div className="bg-black/70 text-white px-3 py-1 rounded text-xs backdrop-blur-sm">
+                    Etiqueta del café
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -206,7 +206,7 @@ export default function PhotoCapture({ onPhotoTaken, onCancel }: PhotoCapturePro
               Nuestra IA extraerá automáticamente el tostador, nombre del café, origen, fecha de tueste y otros detalles desde la foto.
             </p>
             
-            <div className="space-y-3 w-full max-w-sm">
+            <div className="space-y-4 w-full max-w-sm">
               <button
                 onClick={startCamera}
                 disabled={loading}
@@ -217,26 +217,29 @@ export default function PhotoCapture({ onPhotoTaken, onCancel }: PhotoCapturePro
                 ) : (
                   <Camera className="w-5 h-5" />
                 )}
-                Abrir Cámara
+                📷 Tomar Foto
               </button>
               
               <div className="relative">
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="btn btn-secondary w-full flex items-center justify-center gap-3 h-12 text-sm"
+                  className="btn btn-secondary w-full flex items-center justify-center gap-3 h-14 text-base font-medium"
                 >
-                  <Upload className="w-4 h-4" />
-                  Subir desde Galería
+                  <Upload className="w-5 h-5" />
+                  📱 Elegir desde Galería
                 </button>
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
-                  capture="environment"
                   onChange={handleFileSelect}
                   className="hidden"
                 />
               </div>
+              
+              <p className="text-xs text-subtext0 text-center">
+                O puedes saltarte la foto y agregar el café manualmente
+              </p>
             </div>
 
             <div className="text-xs text-subtext0 text-center max-w-sm">
