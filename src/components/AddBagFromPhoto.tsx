@@ -65,13 +65,16 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
   const updateField = (section: keyof ExtractedBagInfo, field: string, value: any) => {
     if (!editedInfo) return
     
-    setEditedInfo(prev => ({
-      ...prev!,
-      [section]: {
-        ...prev![section],
-        [field]: value
+    setEditedInfo(prev => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        [section]: {
+          ...prev[section] as any,
+          [field]: value
+        }
       }
-    }))
+    })
   }
 
   if (step === 'initial') {
@@ -110,9 +113,9 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
   if (step === 'review' && editedInfo) {
     return (
       <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
-        <div className="p-4 border-b border-overlay0 flex items-center justify-between sticky top-0 bg-background">
-          <h2 className="text-lg font-semibold">Review & Save</h2>
-          <button onClick={handleCancel}>
+        <div className="p-4 border-b border-overlay0 flex items-center justify-between sticky top-0 bg-background z-10">
+          <h2 className="text-lg font-semibold">Revisar y Guardar</h2>
+          <button onClick={handleCancel} className="p-2 -mr-2">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -134,45 +137,47 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
 
           {/* Quick Essential Fields */}
           <div className="card p-4">
+            <h3 className="text-sm font-semibold text-subtext0 uppercase tracking-wide mb-4">Información Básica</h3>
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Roaster</label>
-                  <input 
-                    value={editedInfo.roaster.name}
-                    onChange={(e) => updateField('roaster', 'name', e.target.value)}
-                    className="input w-full"
-                    placeholder="Roaster name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Coffee Name</label>
-                  <input 
-                    value={editedInfo.coffee.name}
-                    onChange={(e) => updateField('coffee', 'name', e.target.value)}
-                    className="input w-full"
-                    placeholder="Coffee name"
-                  />
-                </div>
+              {/* Full width inputs for better mobile experience */}
+              <div>
+                <label className="block text-sm font-medium mb-2">Tostador</label>
+                <input 
+                  value={editedInfo.roaster.name}
+                  onChange={(e) => updateField('roaster', 'name', e.target.value)}
+                  className="input w-full h-12 text-base"
+                  placeholder="Nombre del tostador"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium mb-2">Nombre del Café</label>
+                <input 
+                  value={editedInfo.coffee.name}
+                  onChange={(e) => updateField('coffee', 'name', e.target.value)}
+                  className="input w-full h-12 text-base"
+                  placeholder="Nombre del café"
+                />
               </div>
               
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Origin</label>
+                  <label className="block text-sm font-medium mb-2">Origen</label>
                   <input 
                     value={editedInfo.coffee.origin_country || ''}
                     onChange={(e) => updateField('coffee', 'origin_country', e.target.value)}
-                    className="input w-full"
-                    placeholder="e.g. Ethiopia"
+                    className="input w-full h-12 text-base"
+                    placeholder="ej. Etiopía"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Size (g)</label>
+                  <label className="block text-sm font-medium mb-2">Tamaño (g)</label>
                   <input 
                     type="number"
+                    inputMode="numeric"
                     value={editedInfo.bag.size_g}
                     onChange={(e) => updateField('bag', 'size_g', parseInt(e.target.value) || 0)}
-                    className="input w-full"
+                    className="input w-full h-12 text-base"
                     placeholder="250"
                   />
                 </div>
@@ -180,23 +185,24 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Price</label>
+                  <label className="block text-sm font-medium mb-2">Precio (€)</label>
                   <input 
                     type="number"
+                    inputMode="decimal"
                     step="0.01"
                     value={editedInfo.bag.price || ''}
                     onChange={(e) => updateField('bag', 'price', e.target.value ? parseFloat(e.target.value) : null)}
-                    className="input w-full"
+                    className="input w-full h-12 text-base"
                     placeholder="15.00"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Roast Date</label>
+                  <label className="block text-sm font-medium mb-2">Fecha de Tueste</label>
                   <input 
                     type="date"
                     value={editedInfo.bag.roast_date || ''}
                     onChange={(e) => updateField('bag', 'roast_date', e.target.value)}
-                    className="input w-full"
+                    className="input w-full h-12 text-base"
                   />
                 </div>
               </div>
@@ -470,20 +476,22 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
           </div>
 
           {/* Action buttons */}
-          <div className="flex gap-3 pt-4">
-            <button 
-              onClick={handleCancel}
-              className="btn btn-secondary flex-1"
-            >
-              Cancel
-            </button>
-            <button 
-              onClick={handleSave}
-              className="btn btn-primary flex-1 flex items-center justify-center gap-2"
-            >
-              <Check className="w-4 h-4" />
-              Save Bag
-            </button>
+          <div className="sticky bottom-0 bg-background border-t border-overlay0 p-4 -mx-4 mt-6">
+            <div className="flex gap-3">
+              <button 
+                onClick={handleCancel}
+                className="btn btn-secondary flex-1 h-12 text-base"
+              >
+                Cancelar
+              </button>
+              <button 
+                onClick={handleSave}
+                className="btn btn-primary flex-1 h-12 text-base flex items-center justify-center gap-2 font-medium"
+              >
+                <Check className="w-5 h-5" />
+                Guardar Café
+              </button>
+            </div>
           </div>
         </div>
       </div>

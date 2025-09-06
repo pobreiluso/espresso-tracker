@@ -125,8 +125,8 @@ export function sanitizeFlavorProfile(profile: any): any {
   // Sanitize notes array
   if (profile.notes && Array.isArray(profile.notes)) {
     const sanitizedNotes = profile.notes
-      .map(note => sanitizeStringValue(note))
-      .filter(note => note !== null)
+      .map((note: any) => sanitizeStringValue(note))
+      .filter((note: any) => note !== null)
     
     if (sanitizedNotes.length > 0) {
       sanitized.notes = sanitizedNotes

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Layout from '@/components/Layout'
 import AddBagFromPhoto from '@/components/AddBagFromPhoto'
 import BagCard from '@/components/BagCard'
+import PullToRefresh from '@/components/PullToRefresh'
 import { getBags, getOpenBags, getFinishedBags, markBagAsFinished, deleteBag } from '@/lib/queries'
 import { Loader2 } from 'lucide-react'
 
@@ -14,10 +15,16 @@ export default function BagsPage() {
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<FilterType>('all')
   const [refreshKey, setRefreshKey] = useState(0)
+  const [isRefreshing, setIsRefreshing] = useState(false)
 
-  const fetchBags = async () => {
+  const fetchBags = async (isRefresh = false) => {
     try {
-      setLoading(true)
+      if (isRefresh) {
+        setIsRefreshing(true)
+      } else {
+        setLoading(true)
+      }
+      
       let data
       
       switch (filter) {
@@ -36,12 +43,17 @@ export default function BagsPage() {
       console.error('Error fetching bags:', error)
     } finally {
       setLoading(false)
+      setIsRefreshing(false)
     }
+  }
+
+  const handleRefresh = () => {
+    fetchBags(true)
   }
 
   useEffect(() => {
     fetchBags()
-  }, [filter, refreshKey])
+  }, [filter, refreshKey]) // fetchBags is stable due to being inside the component
 
   const handleBagAdded = () => {
     setRefreshKey(prev => prev + 1)
@@ -71,41 +83,42 @@ export default function BagsPage() {
 
   return (
     <Layout>
-      <div className="space-y-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-text mb-2">Coffee Bags</h1>
-            <p className="text-subtext1">Manage your coffee bag collection</p>
+      <PullToRefresh onRefresh={handleRefresh} isRefreshing={isRefreshing}>
+        <div className="space-y-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-text mb-2">Mis Cafés</h1>
+              <p className="text-subtext1">Gestiona tu colección de cafés</p>
+            </div>
+            <div className="hidden md:flex gap-2">
+              <AddBagFromPhoto onSuccess={handleBagAdded} />
+              <button className="btn btn-secondary">
+                + Entrada Manual
+              </button>
+            </div>
           </div>
-          <div className="flex gap-2">
-            <AddBagFromPhoto onSuccess={handleBagAdded} />
-            <button className="btn btn-secondary">
-              + Manual Entry
+
+          {/* Filters */}
+          <div className="flex gap-2 overflow-x-auto pb-2">
+            <button 
+              onClick={() => setFilter('all')}
+              className={`btn ${filter === 'all' ? 'btn-primary' : 'bg-surface1 text-subtext1'} whitespace-nowrap h-10 px-4 text-sm`}
+            >
+              Todos
+            </button>
+            <button 
+              onClick={() => setFilter('open')}
+              className={`btn ${filter === 'open' ? 'btn-primary' : 'bg-surface1 text-subtext1'} whitespace-nowrap h-10 px-4 text-sm`}
+            >
+              Abiertos
+            </button>
+            <button 
+              onClick={() => setFilter('finished')}
+              className={`btn ${filter === 'finished' ? 'btn-primary' : 'bg-surface1 text-subtext1'} whitespace-nowrap h-10 px-4 text-sm`}
+            >
+              Terminados
             </button>
           </div>
-        </div>
-
-        {/* Filters */}
-        <div className="flex gap-4 flex-wrap">
-          <button 
-            onClick={() => setFilter('all')}
-            className={`btn ${filter === 'all' ? 'btn-primary' : 'bg-surface1 text-subtext1'}`}
-          >
-            All Bags
-          </button>
-          <button 
-            onClick={() => setFilter('open')}
-            className={`btn ${filter === 'open' ? 'btn-primary' : 'bg-surface1 text-subtext1'}`}
-          >
-            Open Only
-          </button>
-          <button 
-            onClick={() => setFilter('finished')}
-            className={`btn ${filter === 'finished' ? 'btn-primary' : 'bg-surface1 text-subtext1'}`}
-          >
-            Finished
-          </button>
-        </div>
 
         {/* Loading state */}
         {loading && (
@@ -137,29 +150,32 @@ export default function BagsPage() {
                  filter === 'open' ? '☕' : '✅'}
               </div>
               <h2 className="text-xl font-semibold mb-2">
-                {filter === 'all' ? 'Start with a photo' :
-                 filter === 'open' ? 'No open bags' :
-                 'No finished bags'}
+                {filter === 'all' ? 'Empieza con una foto' :
+                 filter === 'open' ? 'No hay cafés abiertos' :
+                 'No hay cafés terminados'}
               </h2>
-              <p className="text-subtext1 mb-6">
+              <p className="text-subtext1 mb-6 text-sm leading-relaxed">
                 {filter === 'all' ? 
-                  'Simply take a photo of your coffee bag and our AI will extract all the details automatically - roaster, coffee name, origin, roast date, and more!' :
+                  'Simplemente toma una foto de tu bolsa de café y nuestra IA extraerá automáticamente todos los detalles: tostador, nombre del café, origen, fecha de tueste, ¡y mucho más!' :
                  filter === 'open' ?
-                  'All your bags are finished. Add a new bag to start tracking!' :
-                  'No bags have been finished yet.'}
+                  'Todos tus cafés están terminados. ¡Añade un nuevo café para empezar a hacer seguimiento!' :
+                  'Aún no has terminado ningún café.'}
               </p>
               {(filter === 'all' || filter === 'open') && (
-                <div className="flex justify-center gap-4">
-                  <AddBagFromPhoto onSuccess={handleBagAdded} />
+                <div className="flex justify-center gap-3 flex-wrap">
+                  <div className="md:hidden">
+                    <AddBagFromPhoto onSuccess={handleBagAdded} />
+                  </div>
                   <button className="btn btn-secondary">
-                    + Manual Entry
+                    + Entrada Manual
                   </button>
                 </div>
               )}
             </div>
           </div>
         )}
-      </div>
+        </div>
+      </PullToRefresh>
     </Layout>
   )
 }

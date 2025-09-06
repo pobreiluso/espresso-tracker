@@ -19,7 +19,7 @@ export default function BagCard({ bag, onFinish, onDelete }: BagCardProps) {
   const daysSinceRoast = roastDate ? formatDistanceToNow(roastDate) : null
 
   return (
-    <div className={`card p-4 transition-all hover:shadow-md ${
+    <div className={`card p-4 transition-all hover:shadow-md active:scale-[0.98] ${
       isOpen ? 'border-primary/20' : 'border-overlay0 opacity-75'
     }`}>
       <div className="flex items-start justify-between mb-3">
@@ -97,27 +97,27 @@ export default function BagCard({ bag, onFinish, onDelete }: BagCardProps) {
       <div className="flex gap-2">
         {isOpen && (
           <>
-            <button className="btn btn-primary flex-1 text-sm">
-              + New Brew
+            <button className="btn btn-primary flex-1 text-sm h-9 font-medium">
+              + Nuevo Brew
             </button>
             <button 
               onClick={onFinish}
-              className="btn btn-secondary text-sm"
+              className="btn btn-secondary text-sm h-9 px-3 whitespace-nowrap"
             >
-              Mark Finished
+              Terminar
             </button>
           </>
         )}
         {!isOpen && (
-          <button className="btn btn-secondary flex-1 text-sm">
-            View Details
+          <button className="btn btn-secondary flex-1 text-sm h-9">
+            Ver Detalles
           </button>
         )}
         {onDelete && (
           <button 
             onClick={onDelete}
-            className="btn bg-red/10 text-red hover:bg-red hover:text-white text-sm px-3"
-            title="Delete bag"
+            className="btn bg-red/10 text-red hover:bg-red hover:text-white active:scale-95 text-sm px-3 h-9 transition-all"
+            title="Eliminar café"
           >
             <Trash2 className="w-4 h-4" />
           </button>

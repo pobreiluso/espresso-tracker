@@ -35,14 +35,14 @@ export default function Navigation() {
       {/* Mobile navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-surface0 border-t border-overlay0 md:hidden z-50">
         <div className="flex items-center justify-around py-2">
-          {navigation.map((item) => {
+          {navigation.slice(0, 4).map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex flex-col items-center py-2 px-3 rounded-lg transition-colors ${
+                className={`flex flex-col items-center py-2 px-2 rounded-lg transition-colors ${
                   isActive
                     ? 'text-primary bg-surface1'
                     : 'text-subtext0 hover:text-text hover:bg-surface1'
@@ -53,13 +53,57 @@ export default function Navigation() {
               </Link>
             )
           })}
-          <button
-            onClick={handleSignOut}
-            className="flex flex-col items-center py-2 px-3 rounded-lg transition-colors text-subtext0 hover:text-destructive"
-          >
-            <LogOut className="w-5 h-5 mb-1" />
-            <span className="text-xs">Sign Out</span>
-          </button>
+          
+          {/* Mobile menu for entities */}
+          <div className="relative">
+            <button
+              onClick={() => setEntitiesExpanded(!entitiesExpanded)}
+              className={`flex flex-col items-center py-2 px-2 rounded-lg transition-colors ${
+                entities.some(e => pathname === e.href)
+                  ? 'text-primary bg-surface1'
+                  : 'text-subtext0 hover:text-text hover:bg-surface1'
+              }`}
+            >
+              <Building className="w-5 h-5 mb-1" />
+              <span className="text-xs">More</span>
+            </button>
+            
+            {entitiesExpanded && (
+              <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-surface0 border border-overlay0 rounded-lg shadow-lg min-w-[120px]">
+                {entities.map((item) => {
+                  const Icon = item.icon
+                  const isActive = pathname === item.href
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      onClick={() => setEntitiesExpanded(false)}
+                      className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
+                        isActive
+                          ? 'text-primary bg-surface1'
+                          : 'text-subtext0 hover:text-text hover:bg-surface1'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 mr-2" />
+                      {item.name}
+                    </Link>
+                  )
+                })}
+                <div className="border-t border-overlay0 mt-1 pt-1">
+                  <button
+                    onClick={() => {
+                      handleSignOut()
+                      setEntitiesExpanded(false)
+                    }}
+                    className="flex items-center w-full px-3 py-2 text-sm rounded-lg transition-colors text-subtext0 hover:text-destructive hover:bg-surface1"
+                  >
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </nav>
 
