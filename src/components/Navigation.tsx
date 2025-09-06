@@ -3,7 +3,8 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/lib/auth'
-import { Home, Coffee, Beaker, Settings, LogOut } from 'lucide-react'
+import { Home, Coffee, Beaker, Settings, LogOut, ChevronDown, ChevronRight, Building, Bean } from 'lucide-react'
+import { useState } from 'react'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
@@ -12,8 +13,14 @@ const navigation = [
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
+const entities = [
+  { name: 'Roasters', href: '/roasters', icon: Building },
+  { name: 'Coffees', href: '/coffees', icon: Bean },
+]
+
 export default function Navigation() {
   const pathname = usePathname()
+  const [entitiesExpanded, setEntitiesExpanded] = useState(false)
 
   const handleSignOut = async () => {
     try {
@@ -81,6 +88,44 @@ export default function Navigation() {
               </Link>
             )
           })}
+          
+          {/* Entities Section */}
+          <div className="mt-6">
+            <button
+              onClick={() => setEntitiesExpanded(!entitiesExpanded)}
+              className="flex items-center w-full px-3 py-2 rounded-lg transition-colors text-subtext0 hover:text-text hover:bg-surface1"
+            >
+              {entitiesExpanded ? (
+                <ChevronDown className="w-4 h-4 mr-3" />
+              ) : (
+                <ChevronRight className="w-4 h-4 mr-3" />
+              )}
+              <span className="text-xs font-medium uppercase tracking-wider">Entities</span>
+            </button>
+            
+            {entitiesExpanded && (
+              <div className="ml-4 mt-2 space-y-1">
+                {entities.map((item) => {
+                  const Icon = item.icon
+                  const isActive = pathname === item.href
+                  return (
+                    <Link
+                      key={item.name}
+                      href={item.href}
+                      className={`flex items-center px-3 py-2 rounded-lg transition-colors ${
+                        isActive
+                          ? 'text-primary bg-surface1'
+                          : 'text-subtext0 hover:text-text hover:bg-surface1'
+                      }`}
+                    >
+                      <Icon className="w-4 h-4 mr-3" />
+                      <span className="text-sm">{item.name}</span>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+          </div>
         </div>
 
         <button

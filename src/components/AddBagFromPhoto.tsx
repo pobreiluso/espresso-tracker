@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import PhotoCapture from './PhotoCapture'
-import { Camera, Loader2, Check, X, Edit } from 'lucide-react'
+import { Camera, Loader2, Check, X, Edit, ChevronDown, ChevronUp } from 'lucide-react'
 import { extractBagInfoFromImage, processBagFromPhoto, ExtractedBagInfo } from '@/lib/bags'
 
 interface AddBagFromPhotoProps {
@@ -16,6 +16,7 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
   const [extractedInfo, setExtractedInfo] = useState<ExtractedBagInfo | null>(null)
   const [error, setError] = useState<string>('')
   const [editedInfo, setEditedInfo] = useState<ExtractedBagInfo | null>(null)
+  const [showDetails, setShowDetails] = useState(false)
 
   const handlePhotoTaken = async (file: File) => {
     setStep('processing')
@@ -110,15 +111,15 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
     return (
       <div className="fixed inset-0 z-50 bg-background overflow-y-auto">
         <div className="p-4 border-b border-overlay0 flex items-center justify-between sticky top-0 bg-background">
-          <h2 className="text-lg font-semibold">Review & Confirm</h2>
+          <h2 className="text-lg font-semibold">Review & Save</h2>
           <button onClick={handleCancel}>
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-4 space-y-6">
+        <div className="p-4 space-y-4">
           {/* Confidence indicator */}
-          <div className="card p-4">
+          <div className="card p-3">
             <div className="flex items-center justify-between">
               <span className="text-sm font-medium">Detection Confidence</span>
               <span className={`px-2 py-1 rounded text-xs ${
@@ -131,108 +132,33 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
             </div>
           </div>
 
-          {/* Roaster info */}
+          {/* Quick Essential Fields */}
           <div className="card p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <h3 className="font-semibold">Roaster</h3>
-              <Edit className="w-4 h-4 text-subtext1" />
-            </div>
-            <div className="space-y-3">
-              <div>
-                <label className="block text-sm font-medium mb-1">Name</label>
-                <input 
-                  value={editedInfo.roaster.name}
-                  onChange={(e) => updateField('roaster', 'name', e.target.value)}
-                  className="input w-full"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Country</label>
-                  <input 
-                    value={editedInfo.roaster.country || ''}
-                    onChange={(e) => updateField('roaster', 'country', e.target.value)}
-                    className="input w-full"
-                    placeholder="e.g. United States"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Founded Year</label>
-                  <input 
-                    type="number"
-                    value={editedInfo.roaster.founded_year || ''}
-                    onChange={(e) => updateField('roaster', 'founded_year', e.target.value ? parseInt(e.target.value) : null)}
-                    className="input w-full"
-                    placeholder="e.g. 2002"
-                  />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Specialty</label>
-                  <input 
-                    value={editedInfo.roaster.specialty || ''}
-                    onChange={(e) => updateField('roaster', 'specialty', e.target.value)}
-                    className="input w-full"
-                    placeholder="e.g. Third Wave"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Size</label>
-                  <select 
-                    value={editedInfo.roaster.size_category || ''}
-                    onChange={(e) => updateField('roaster', 'size_category', e.target.value)}
-                    className="input w-full"
-                  >
-                    <option value="">Select size</option>
-                    <option value="Micro">Micro</option>
-                    <option value="Small">Small</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Large">Large</option>
-                  </select>
-                </div>
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Website</label>
-                <input 
-                  type="url"
-                  value={editedInfo.roaster.website || ''}
-                  onChange={(e) => updateField('roaster', 'website', e.target.value)}
-                  className="input w-full"
-                  placeholder="https://..."
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Description</label>
-                <textarea 
-                  value={editedInfo.roaster.description || ''}
-                  onChange={(e) => updateField('roaster', 'description', e.target.value)}
-                  className="input w-full h-20 resize-none"
-                  placeholder="Brief description of the roaster..."
-                />
-              </div>
-            </div>
-          </div>
-
-          {/* Coffee info */}
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <h3 className="font-semibold">Coffee</h3>
-              <Edit className="w-4 h-4 text-subtext1" />
-            </div>
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium mb-1">Name</label>
-                <input 
-                  value={editedInfo.coffee.name}
-                  onChange={(e) => updateField('coffee', 'name', e.target.value)}
-                  className="input w-full"
-                />
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-sm font-medium mb-1">Roaster</label>
+                  <input 
+                    value={editedInfo.roaster.name}
+                    onChange={(e) => updateField('roaster', 'name', e.target.value)}
+                    className="input w-full"
+                    placeholder="Roaster name"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Coffee Name</label>
+                  <input 
+                    value={editedInfo.coffee.name}
+                    onChange={(e) => updateField('coffee', 'name', e.target.value)}
+                    className="input w-full"
+                    placeholder="Coffee name"
+                  />
+                </div>
               </div>
               
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1">Origin Country</label>
+                  <label className="block text-sm font-medium mb-1">Origin</label>
                   <input 
                     value={editedInfo.coffee.origin_country || ''}
                     onChange={(e) => updateField('coffee', 'origin_country', e.target.value)}
@@ -241,192 +167,18 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1">Region</label>
-                  <input 
-                    value={editedInfo.coffee.region || ''}
-                    onChange={(e) => updateField('coffee', 'region', e.target.value)}
-                    className="input w-full"
-                    placeholder="e.g. Sidama"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Farm/Station</label>
-                  <input 
-                    value={editedInfo.coffee.farm || ''}
-                    onChange={(e) => updateField('coffee', 'farm', e.target.value)}
-                    className="input w-full"
-                    placeholder="e.g. Bensa Washing Station"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Producer</label>
-                  <input 
-                    value={editedInfo.coffee.producer || ''}
-                    onChange={(e) => updateField('coffee', 'producer', e.target.value)}
-                    className="input w-full"
-                    placeholder="e.g. Local Farmers"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Variety</label>
-                  <input 
-                    value={editedInfo.coffee.variety || ''}
-                    onChange={(e) => updateField('coffee', 'variety', e.target.value)}
-                    className="input w-full"
-                    placeholder="e.g. Heirloom"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Process</label>
-                  <input 
-                    value={editedInfo.coffee.process || ''}
-                    onChange={(e) => updateField('coffee', 'process', e.target.value)}
-                    className="input w-full"
-                    placeholder="e.g. Washed"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-1">Altitude (m)</label>
-                  <input 
-                    type="number"
-                    value={editedInfo.coffee.altitude || ''}
-                    onChange={(e) => updateField('coffee', 'altitude', e.target.value ? parseInt(e.target.value) : null)}
-                    className="input w-full"
-                    placeholder="1900"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Cupping Score</label>
-                  <input 
-                    type="number"
-                    step="0.1"
-                    value={editedInfo.coffee.cupping_score || ''}
-                    onChange={(e) => updateField('coffee', 'cupping_score', e.target.value ? parseFloat(e.target.value) : null)}
-                    className="input w-full"
-                    placeholder="86.5"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1">Harvest Season</label>
-                  <input 
-                    value={editedInfo.coffee.harvest_season || ''}
-                    onChange={(e) => updateField('coffee', 'harvest_season', e.target.value)}
-                    className="input w-full"
-                    placeholder="Oct-Feb"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Certifications</label>
-                <input 
-                  value={editedInfo.coffee.certification || ''}
-                  onChange={(e) => updateField('coffee', 'certification', e.target.value)}
-                  className="input w-full"
-                  placeholder="e.g. Organic, Fair Trade"
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium mb-1">Tasting Notes</label>
-                <textarea 
-                  value={editedInfo.coffee.tasting_notes || ''}
-                  onChange={(e) => updateField('coffee', 'tasting_notes', e.target.value)}
-                  className="input w-full h-20 resize-none"
-                  placeholder="e.g. Blueberry, dark chocolate, bright citrus acidity..."
-                />
-              </div>
-
-              {editedInfo.coffee.flavor_profile && (
-                <div>
-                  <label className="block text-sm font-medium mb-2">Flavor Profile (1-10)</label>
-                  <div className="grid grid-cols-3 gap-3">
-                    <div>
-                      <label className="block text-xs text-subtext1 mb-1">Acidity</label>
-                      <input 
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={editedInfo.coffee.flavor_profile.acidity || ''}
-                        onChange={(e) => updateField('coffee', 'flavor_profile', {
-                          ...editedInfo.coffee.flavor_profile,
-                          acidity: e.target.value ? parseInt(e.target.value) : null
-                        })}
-                        className="input w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-subtext1 mb-1">Body</label>
-                      <input 
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={editedInfo.coffee.flavor_profile.body || ''}
-                        onChange={(e) => updateField('coffee', 'flavor_profile', {
-                          ...editedInfo.coffee.flavor_profile,
-                          body: e.target.value ? parseInt(e.target.value) : null
-                        })}
-                        className="input w-full"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-xs text-subtext1 mb-1">Sweetness</label>
-                      <input 
-                        type="number"
-                        min="1"
-                        max="10"
-                        value={editedInfo.coffee.flavor_profile.sweetness || ''}
-                        onChange={(e) => updateField('coffee', 'flavor_profile', {
-                          ...editedInfo.coffee.flavor_profile,
-                          sweetness: e.target.value ? parseInt(e.target.value) : null
-                        })}
-                        className="input w-full"
-                      />
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {editedInfo.coffee.coffee_story && (
-                <div>
-                  <label className="block text-sm font-medium mb-1">Coffee Story</label>
-                  <textarea 
-                    value={editedInfo.coffee.coffee_story || ''}
-                    onChange={(e) => updateField('coffee', 'coffee_story', e.target.value)}
-                    className="input w-full h-24 resize-none"
-                    placeholder="Background story about the coffee..."
-                  />
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Bag info */}
-          <div className="card p-4">
-            <div className="flex items-center gap-2 mb-4">
-              <h3 className="font-semibold">Bag Details</h3>
-              <Edit className="w-4 h-4 text-subtext1" />
-            </div>
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
                   <label className="block text-sm font-medium mb-1">Size (g)</label>
                   <input 
                     type="number"
                     value={editedInfo.bag.size_g}
-                    onChange={(e) => updateField('bag', 'size_g', parseInt(e.target.value))}
+                    onChange={(e) => updateField('bag', 'size_g', parseInt(e.target.value) || 0)}
                     className="input w-full"
+                    placeholder="250"
                   />
                 </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
                 <div>
                   <label className="block text-sm font-medium mb-1">Price</label>
                   <input 
@@ -435,20 +187,286 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
                     value={editedInfo.bag.price || ''}
                     onChange={(e) => updateField('bag', 'price', e.target.value ? parseFloat(e.target.value) : null)}
                     className="input w-full"
-                    placeholder="0.00"
+                    placeholder="15.00"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">Roast Date</label>
+                  <input 
+                    type="date"
+                    value={editedInfo.bag.roast_date || ''}
+                    onChange={(e) => updateField('bag', 'roast_date', e.target.value)}
+                    className="input w-full"
                   />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium mb-1">Roast Date</label>
-                <input 
-                  type="date"
-                  value={editedInfo.bag.roast_date || ''}
-                  onChange={(e) => updateField('bag', 'roast_date', e.target.value)}
-                  className="input w-full"
-                />
-              </div>
             </div>
+          </div>
+
+          {/* More Details Collapsible Section */}
+          <div className="card">
+            <button
+              onClick={() => setShowDetails(!showDetails)}
+              className="w-full p-4 flex items-center justify-between text-left border-b border-overlay0 hover:bg-surface0 transition-colors"
+            >
+              <span className="font-medium">More Details</span>
+              {showDetails ? (
+                <ChevronUp className="w-4 h-4" />
+              ) : (
+                <ChevronDown className="w-4 h-4" />
+              )}
+            </button>
+            
+            {showDetails && (
+              <div className="p-4 space-y-6">
+                {/* Roaster Details */}
+                <div>
+                  <h4 className="font-semibold mb-3 text-sm text-subtext0 uppercase tracking-wide">Roaster Details</h4>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Country</label>
+                        <input 
+                          value={editedInfo.roaster.country || ''}
+                          onChange={(e) => updateField('roaster', 'country', e.target.value)}
+                          className="input w-full"
+                          placeholder="United States"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Founded</label>
+                        <input 
+                          type="number"
+                          value={editedInfo.roaster.founded_year || ''}
+                          onChange={(e) => updateField('roaster', 'founded_year', e.target.value ? parseInt(e.target.value) : null)}
+                          className="input w-full"
+                          placeholder="2002"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Specialty</label>
+                        <input 
+                          value={editedInfo.roaster.specialty || ''}
+                          onChange={(e) => updateField('roaster', 'specialty', e.target.value)}
+                          className="input w-full"
+                          placeholder="Third Wave"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Size Category</label>
+                        <select 
+                          value={editedInfo.roaster.size_category || ''}
+                          onChange={(e) => updateField('roaster', 'size_category', e.target.value)}
+                          className="input w-full"
+                        >
+                          <option value="">Select size</option>
+                          <option value="Micro">Micro</option>
+                          <option value="Small">Small</option>
+                          <option value="Medium">Medium</option>
+                          <option value="Large">Large</option>
+                        </select>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Website</label>
+                      <input 
+                        type="url"
+                        value={editedInfo.roaster.website || ''}
+                        onChange={(e) => updateField('roaster', 'website', e.target.value)}
+                        className="input w-full"
+                        placeholder="https://..."
+                      />
+                    </div>
+                    {editedInfo.roaster.description && (
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Description</label>
+                        <textarea 
+                          value={editedInfo.roaster.description || ''}
+                          onChange={(e) => updateField('roaster', 'description', e.target.value)}
+                          className="input w-full h-16 resize-none text-sm"
+                          placeholder="Brief description..."
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Coffee Details */}
+                <div>
+                  <h4 className="font-semibold mb-3 text-sm text-subtext0 uppercase tracking-wide">Coffee Details</h4>
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Region</label>
+                        <input 
+                          value={editedInfo.coffee.region || ''}
+                          onChange={(e) => updateField('coffee', 'region', e.target.value)}
+                          className="input w-full"
+                          placeholder="Sidama"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Farm/Station</label>
+                        <input 
+                          value={editedInfo.coffee.farm || ''}
+                          onChange={(e) => updateField('coffee', 'farm', e.target.value)}
+                          className="input w-full"
+                          placeholder="Bensa Washing Station"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Variety</label>
+                        <input 
+                          value={editedInfo.coffee.variety || ''}
+                          onChange={(e) => updateField('coffee', 'variety', e.target.value)}
+                          className="input w-full"
+                          placeholder="Heirloom"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Process</label>
+                        <input 
+                          value={editedInfo.coffee.process || ''}
+                          onChange={(e) => updateField('coffee', 'process', e.target.value)}
+                          className="input w-full"
+                          placeholder="Washed"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-3 gap-3">
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Altitude (m)</label>
+                        <input 
+                          type="number"
+                          value={editedInfo.coffee.altitude || ''}
+                          onChange={(e) => updateField('coffee', 'altitude', e.target.value ? parseInt(e.target.value) : null)}
+                          className="input w-full"
+                          placeholder="1900"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Cupping Score</label>
+                        <input 
+                          type="number"
+                          step="0.1"
+                          min="0"
+                          max="100"
+                          value={editedInfo.coffee.cupping_score || ''}
+                          onChange={(e) => updateField('coffee', 'cupping_score', e.target.value ? parseFloat(e.target.value) : null)}
+                          className="input w-full"
+                          placeholder="86.5"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Harvest</label>
+                        <input 
+                          value={editedInfo.coffee.harvest_season || ''}
+                          onChange={(e) => updateField('coffee', 'harvest_season', e.target.value)}
+                          className="input w-full"
+                          placeholder="Oct-Feb"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Certifications</label>
+                      <input 
+                        value={editedInfo.coffee.certification || ''}
+                        onChange={(e) => updateField('coffee', 'certification', e.target.value)}
+                        className="input w-full"
+                        placeholder="Organic, Fair Trade"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Tasting Notes</label>
+                      <textarea 
+                        value={editedInfo.coffee.tasting_notes || ''}
+                        onChange={(e) => updateField('coffee', 'tasting_notes', e.target.value)}
+                        className="input w-full h-16 resize-none text-sm"
+                        placeholder="Blueberry, dark chocolate, bright citrus acidity..."
+                      />
+                    </div>
+                    {editedInfo.coffee.flavor_profile && (
+                      <div>
+                        <label className="block text-sm font-medium mb-2">Flavor Profile (1-10)</label>
+                        <div className="grid grid-cols-3 gap-3">
+                          <div>
+                            <label className="block text-xs text-subtext1 mb-1">Acidity</label>
+                            <input 
+                              type="number"
+                              min="1"
+                              max="10"
+                              value={editedInfo.coffee.flavor_profile.acidity || ''}
+                              onChange={(e) => updateField('coffee', 'flavor_profile', {
+                                ...editedInfo.coffee.flavor_profile,
+                                acidity: e.target.value ? parseInt(e.target.value) : null
+                              })}
+                              className="input w-full"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-subtext1 mb-1">Body</label>
+                            <input 
+                              type="number"
+                              min="1"
+                              max="10"
+                              value={editedInfo.coffee.flavor_profile.body || ''}
+                              onChange={(e) => updateField('coffee', 'flavor_profile', {
+                                ...editedInfo.coffee.flavor_profile,
+                                body: e.target.value ? parseInt(e.target.value) : null
+                              })}
+                              className="input w-full"
+                            />
+                          </div>
+                          <div>
+                            <label className="block text-xs text-subtext1 mb-1">Sweetness</label>
+                            <input 
+                              type="number"
+                              min="1"
+                              max="10"
+                              value={editedInfo.coffee.flavor_profile.sweetness || ''}
+                              onChange={(e) => updateField('coffee', 'flavor_profile', {
+                                ...editedInfo.coffee.flavor_profile,
+                                sweetness: e.target.value ? parseInt(e.target.value) : null
+                              })}
+                              className="input w-full"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {editedInfo.coffee.coffee_story && (
+                      <div>
+                        <label className="block text-sm font-medium mb-1">Coffee Story</label>
+                        <textarea 
+                          value={editedInfo.coffee.coffee_story || ''}
+                          onChange={(e) => updateField('coffee', 'coffee_story', e.target.value)}
+                          className="input w-full h-20 resize-none text-sm"
+                          placeholder="Background story about the coffee..."
+                        />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Additional Bag Details */}
+                <div>
+                  <h4 className="font-semibold mb-3 text-sm text-subtext0 uppercase tracking-wide">Additional Details</h4>
+                  <div>
+                    <label className="block text-sm font-medium mb-1">Purchase Location</label>
+                    <input 
+                      value={editedInfo.bag.purchase_location || ''}
+                      onChange={(e) => updateField('bag', 'purchase_location', e.target.value)}
+                      className="input w-full"
+                      placeholder="Coffee shop, online store..."
+                    />
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Action buttons */}
