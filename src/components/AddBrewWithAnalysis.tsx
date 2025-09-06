@@ -81,7 +81,7 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
   }
 
   const submitBrew = async () => {
-    if (!selectedBagId || !photo || !analysis) return
+    if (!selectedBagId) return
 
     setIsSubmitting(true)
     setError(null)
@@ -105,44 +105,46 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
         photoUrl = uploadResult.url
       }
 
-      // Create brew record with analysis data
-      // Map detected method to valid values
-      const validMethods = ['espresso', 'v60', 'aeropress', 'chemex', 'kalita', 'frenchpress']
-      let mappedMethod = 'v60' // default
-      const detectedMethod = analysis.brewing_method.detected_method?.toLowerCase()
-      if (detectedMethod?.includes('pour') || detectedMethod?.includes('v60')) mappedMethod = 'v60'
-      else if (detectedMethod?.includes('espresso')) mappedMethod = 'espresso'
-      else if (detectedMethod?.includes('aeropress')) mappedMethod = 'aeropress'
-      else if (detectedMethod?.includes('chemex')) mappedMethod = 'chemex'
-      else if (detectedMethod?.includes('kalita')) mappedMethod = 'kalita'
-      else if (detectedMethod?.includes('french') || detectedMethod?.includes('press')) mappedMethod = 'frenchpress'
+      // Create brew record with or without analysis data
+      let mappedMethod = 'v60' // default method
+      
+      if (analysis) {
+        // Map detected method to valid values when analysis is available
+        const detectedMethod = analysis.brewing_method.detected_method?.toLowerCase()
+        if (detectedMethod?.includes('pour') || detectedMethod?.includes('v60')) mappedMethod = 'v60'
+        else if (detectedMethod?.includes('espresso')) mappedMethod = 'espresso'
+        else if (detectedMethod?.includes('aeropress')) mappedMethod = 'aeropress'
+        else if (detectedMethod?.includes('chemex')) mappedMethod = 'chemex'
+        else if (detectedMethod?.includes('kalita')) mappedMethod = 'kalita'
+        else if (detectedMethod?.includes('french') || detectedMethod?.includes('press')) mappedMethod = 'frenchpress'
+      }
 
       const brewData = {
         bag_id: selectedBagId,
         method: mappedMethod,
         dose_g: Math.max(5, Math.min(30, doseGrams || 18)), // Ensure within 5-30 range
-        yield_g: yieldGrams || analysis.volume_estimation.estimated_ml || 30,
+        yield_g: yieldGrams || (analysis?.volume_estimation.estimated_ml) || 30,
         time_s: Math.max(5, Math.min(90, extractionTime || 25)), // Ensure within 5-90 range
         grind_setting: grindSetting ? String(grindSetting) : 'medium',
         water_temp_c: Math.max(80, Math.min(100, waterTemp || 93)), // Ensure within 80-100 range
         rating: Math.max(1, Math.min(10, rating)), // Ensure within 1-10 range
-        notes: notes || analysis.quality_assessment.recommendations.join('. '),
+        notes: notes || (analysis ? analysis.quality_assessment.recommendations.join('. ') : ''),
         brew_date: new Date().toISOString(), // Full timestamp
         
-        // New analysis fields
+        // Analysis fields (null if no analysis)
         extraction_time_seconds: extractionTime || null,
         dose_grams: doseGrams || null,
         yield_grams: yieldGrams || null,
         water_temp_celsius: waterTemp || null,
-        ai_analysis: analysis,
-        extraction_quality: analysis.extraction_analysis.quality,
-        brewing_method_detected: analysis.brewing_method.detected_method,
-        estimated_volume_ml: analysis.volume_estimation.estimated_ml,
-        visual_score: analysis.quality_assessment.overall_score,
-        confidence_score: analysis.confidence_overall,
+        ai_analysis: analysis || null,
+        extraction_quality: analysis?.extraction_analysis.quality || null,
+        brewing_method_detected: analysis?.brewing_method.detected_method || null,
+        estimated_volume_ml: analysis?.volume_estimation.estimated_ml || null,
+        visual_score: analysis?.quality_assessment.overall_score || null,
+        confidence_score: analysis?.confidence_overall || null,
         photo_url: photoUrl,
         has_photo: !!photoUrl,
-        has_ai_analysis: true,
+        has_ai_analysis: !!analysis,
         user_id: '00000000-0000-0000-0000-000000000000' // Dummy user ID for dev
       }
 
@@ -316,8 +318,8 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
               </div>
 
               <div className="space-y-3">
-                <p className="text-sm font-medium text-text">Foto del Café Extraído</p>
-                <div className="flex gap-3">
+                <p className="text-sm font-medium text-text">Foto del Café Extraído (Opcional)</p>
+                <div className="flex gap-2">
                   <button
                     onClick={() => cameraInputRef.current?.click()}
                     className="flex-1 flex items-center justify-center gap-2 py-3 px-4 bg-peach text-base rounded-xl hover:bg-peach/90 transition-colors"
@@ -333,6 +335,13 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
                     Subir Foto
                   </button>
                 </div>
+                <button
+                  onClick={() => setStep('results')}
+                  className="w-full py-3 px-4 bg-surface0 text-subtext0 rounded-xl hover:bg-surface1 transition-colors border border-surface1"
+                >
+                  Continuar sin foto
+                </button>
+                
                 <input
                   ref={cameraInputRef}
                   type="file"
@@ -394,10 +403,12 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
             </div>
           )}
 
-          {step === 'results' && analysis && (
+          {step === 'results' && (
             <div className="space-y-6">
               <div className="text-center">
-                <h3 className="text-lg font-medium text-text mb-2">Análisis Completado</h3>
+                <h3 className="text-lg font-medium text-text mb-2">
+                  {analysis ? 'Análisis Completado' : 'Guardar Café'}
+                </h3>
                 {selectedBag && (
                   <p className="text-subtext0 text-sm">
                     {selectedBag.coffee.roaster.name} - {selectedBag.coffee.name}
@@ -405,7 +416,9 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
                 )}
               </div>
 
-              <div className="bg-surface0 rounded-xl p-4 space-y-4">
+              {analysis ? (
+                <>
+                  <div className="bg-surface0 rounded-xl p-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="text-text font-medium">Calidad de Extracción</span>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium ${
@@ -472,6 +485,20 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
                       </li>
                     ))}
                   </ul>
+                </div>
+              )}
+                </>
+              ) : (
+                <div className="bg-surface0 rounded-xl p-4 text-center">
+                  <p className="text-subtext0 text-sm mb-4">
+                    Se guardará el café sin análisis de IA. Puedes añadir una foto y análisis después si lo deseas.
+                  </p>
+                  <button
+                    onClick={() => setStep('form')}
+                    className="text-peach text-sm hover:underline"
+                  >
+                    ← Volver atrás
+                  </button>
                 </div>
               )}
 
