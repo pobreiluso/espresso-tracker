@@ -16,6 +16,7 @@ export type Database = {
           finish_date: string | null
           id: string
           open_date: string | null
+          photo_url: string | null
           price: number | null
           purchase_location: string | null
           roast_date: string
@@ -28,6 +29,7 @@ export type Database = {
           finish_date?: string | null
           id?: string
           open_date?: string | null
+          photo_url?: string | null
           price?: number | null
           purchase_location?: string | null
           roast_date: string
@@ -40,6 +42,7 @@ export type Database = {
           finish_date?: string | null
           id?: string
           open_date?: string | null
+          photo_url?: string | null
           price?: number | null
           purchase_location?: string | null
           roast_date?: string

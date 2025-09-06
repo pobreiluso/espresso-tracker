@@ -113,12 +113,21 @@ Return ONLY a valid JSON object with this exact structure:
       throw new Error('No response from OpenAI')
     }
 
-    // Parse the JSON response
+    // Parse the JSON response, handling code blocks if present
     let analysisResult
     try {
-      analysisResult = JSON.parse(content)
+      // Remove markdown code block formatting if present
+      let cleanContent = content.trim()
+      if (cleanContent.startsWith('```json')) {
+        cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '')
+      } else if (cleanContent.startsWith('```')) {
+        cleanContent = cleanContent.replace(/^```\s*/, '').replace(/\s*```$/, '')
+      }
+      
+      analysisResult = JSON.parse(cleanContent)
     } catch (parseError) {
       console.error('Failed to parse OpenAI response:', content)
+      console.error('Parse error:', parseError)
       throw new Error('Invalid JSON response from AI analysis')
     }
 

@@ -5,6 +5,7 @@ import { Camera, Upload, Coffee, Clock, Settings, Send, X } from 'lucide-react'
 import { getOpenBags } from '@/lib/queries'
 import { BagWithCoffeeAndRoaster, CreateBrewWithAnalysisForm, BrewAnalysis } from '@/types'
 import { supabase } from '@/lib/supabase'
+import { uploadPhoto, generatePhotoFilename, compressImage } from '@/lib/storage'
 import { useSettings } from '@/lib/useSettings'
 
 interface AddBrewWithAnalysisProps {
@@ -86,18 +87,47 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
     setError(null)
 
     try {
+      // Upload photo first
+      let photoUrl: string | null = null
+      if (photo) {
+        const filename = generatePhotoFilename('brew', 'jpg')
+        const path = `brews/${filename}`
+        
+        // Compress the image before upload
+        const compressedFile = await compressImage(photo)
+        const uploadResult = await uploadPhoto(compressedFile, 'brew-photos', path)
+        
+        if (uploadResult.error) {
+          setError(`Error uploading photo: ${uploadResult.error}`)
+          return
+        }
+        
+        photoUrl = uploadResult.url
+      }
+
       // Create brew record with analysis data
+      // Map detected method to valid values
+      const validMethods = ['espresso', 'v60', 'aeropress', 'chemex', 'kalita', 'frenchpress']
+      let mappedMethod = 'v60' // default
+      const detectedMethod = analysis.brewing_method.detected_method?.toLowerCase()
+      if (detectedMethod?.includes('pour') || detectedMethod?.includes('v60')) mappedMethod = 'v60'
+      else if (detectedMethod?.includes('espresso')) mappedMethod = 'espresso'
+      else if (detectedMethod?.includes('aeropress')) mappedMethod = 'aeropress'
+      else if (detectedMethod?.includes('chemex')) mappedMethod = 'chemex'
+      else if (detectedMethod?.includes('kalita')) mappedMethod = 'kalita'
+      else if (detectedMethod?.includes('french') || detectedMethod?.includes('press')) mappedMethod = 'frenchpress'
+
       const brewData = {
         bag_id: selectedBagId,
-        method: analysis.brewing_method.detected_method as any,
-        dose_g: doseGrams || (analysis.technical_analysis.suggested_adjustments.dose_adjustment === 'increase' ? 20 : 18),
+        method: mappedMethod,
+        dose_g: Math.max(5, Math.min(30, doseGrams || 18)), // Ensure within 5-30 range
         yield_g: yieldGrams || analysis.volume_estimation.estimated_ml || 30,
-        time_s: extractionTime || 25,
+        time_s: Math.max(5, Math.min(90, extractionTime || 25)), // Ensure within 5-90 range
         grind_setting: grindSetting ? String(grindSetting) : 'medium',
-        water_temp_c: waterTemp || 93,
-        rating,
+        water_temp_c: Math.max(80, Math.min(100, waterTemp || 93)), // Ensure within 80-100 range
+        rating: Math.max(1, Math.min(10, rating)), // Ensure within 1-10 range
         notes: notes || analysis.quality_assessment.recommendations.join('. '),
-        brew_date: new Date().toISOString().split('T')[0],
+        brew_date: new Date().toISOString(), // Full timestamp
         
         // New analysis fields
         extraction_time_seconds: extractionTime || null,
@@ -110,17 +140,21 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
         estimated_volume_ml: analysis.volume_estimation.estimated_ml,
         visual_score: analysis.quality_assessment.overall_score,
         confidence_score: analysis.confidence_overall,
-        has_photo: true,
+        photo_url: photoUrl,
+        has_photo: !!photoUrl,
         has_ai_analysis: true,
         user_id: '00000000-0000-0000-0000-000000000000' // Dummy user ID for dev
       }
 
+      console.log('Inserting brew data:', brewData)
+      
       const { error: insertError } = await supabase
         .from('brews')
         .insert(brewData)
 
       if (insertError) {
-        throw insertError
+        console.error('Supabase insert error:', insertError)
+        throw new Error(`Database error: ${insertError.message}`)
       }
 
       onSuccess()

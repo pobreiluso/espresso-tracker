@@ -215,7 +215,8 @@ export async function findOrCreateCoffee(
 
 export async function createBagFromExtractedInfo(
   bagData: ExtractedBagInfo['bag'],
-  coffeeId: string
+  coffeeId: string,
+  photoUrl?: string | null
 ) {
   try {
     const bagInsert: BagInsert = {
@@ -224,6 +225,7 @@ export async function createBagFromExtractedInfo(
       price: sanitizeNumericValue(bagData.price),
       roast_date: sanitizeStringValue(bagData.roast_date) || new Date().toISOString().split('T')[0],
       purchase_location: sanitizeStringValue(bagData.purchase_location),
+      photo_url: photoUrl,
       user_id: MOCK_USER_ID
     }
 
@@ -251,7 +253,7 @@ export async function createBagFromExtractedInfo(
   }
 }
 
-export async function processBagFromPhoto(extractedInfo: ExtractedBagInfo) {
+export async function processBagFromPhoto(extractedInfo: ExtractedBagInfo, photoUrl?: string | null) {
   try {
     console.log('Processing bag from photo with data:', extractedInfo)
     
@@ -267,7 +269,7 @@ export async function processBagFromPhoto(extractedInfo: ExtractedBagInfo) {
     
     // Step 3: Create bag
     console.log('Step 3: Creating bag')
-    const bag = await createBagFromExtractedInfo(extractedInfo.bag, coffee.id)
+    const bag = await createBagFromExtractedInfo(extractedInfo.bag, coffee.id, photoUrl)
     console.log('Bag created:', bag.id)
     
     return {
