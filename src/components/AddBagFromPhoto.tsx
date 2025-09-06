@@ -4,6 +4,7 @@ import { useState } from 'react'
 import PhotoCapture from './PhotoCapture'
 import { Camera, Loader2, Check, X, Edit, ChevronDown, ChevronUp } from 'lucide-react'
 import { extractBagInfoFromImage, processBagFromPhoto, ExtractedBagInfo } from '@/lib/bags'
+import { uploadPhoto, compressImage, generatePhotoFilename } from '@/lib/storage'
 
 interface AddBagFromPhotoProps {
   onSuccess?: () => void
@@ -17,10 +18,12 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
   const [error, setError] = useState<string>('')
   const [editedInfo, setEditedInfo] = useState<ExtractedBagInfo | null>(null)
   const [showDetails, setShowDetails] = useState(false)
+  const [originalPhoto, setOriginalPhoto] = useState<File | null>(null)
 
   const handlePhotoTaken = async (file: File) => {
     setStep('processing')
     setError('')
+    setOriginalPhoto(file) // Store the original photo
 
     try {
       const info = await extractBagInfoFromImage(file)
@@ -34,15 +37,32 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
   }
 
   const handleSave = async () => {
-    if (!editedInfo) return
+    if (!editedInfo || !originalPhoto) return
 
     setStep('saving')
     try {
-      const result = await processBagFromPhoto(editedInfo)
+      // Compress and upload the photo first
+      let photoUrl = null
+      if (originalPhoto) {
+        const compressedFile = await compressImage(originalPhoto)
+        const filename = generatePhotoFilename('bag')
+        const path = `bags/${filename}`
+        
+        const uploadResult = await uploadPhoto(compressedFile, 'bag-photos', path)
+        if (uploadResult.error) {
+          setError(`Failed to upload photo: ${uploadResult.error}`)
+          setStep('error')
+          return
+        }
+        photoUrl = uploadResult.url
+      }
+
+      const result = await processBagFromPhoto(editedInfo, photoUrl)
       if (result.success) {
         setStep('success')
         setTimeout(() => {
           setStep('initial')
+          setOriginalPhoto(null)
           onSuccess?.()
         }, 2000)
       } else {
@@ -60,6 +80,7 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
     setExtractedInfo(null)
     setEditedInfo(null)
     setError('')
+    setOriginalPhoto(null)
   }
 
   const updateField = (section: keyof ExtractedBagInfo, field: string, value: any) => {

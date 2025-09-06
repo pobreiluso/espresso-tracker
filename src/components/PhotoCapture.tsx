@@ -19,22 +19,76 @@ export default function PhotoCapture({ onPhotoTaken, onCancel }: PhotoCapturePro
   const startCamera = async () => {
     try {
       setLoading(true)
-      const constraints = {
+      
+      // Check if getUserMedia is supported
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error('getUserMedia not supported')
+      }
+
+      let constraints = {
         video: { 
-          facingMode: 'environment', // Use back camera on mobile
-          width: { ideal: 1920 },
-          height: { ideal: 1080 }
+          facingMode: 'environment', // Try back camera first
+          width: { ideal: 1280, max: 1920 },
+          height: { ideal: 720, max: 1080 }
         }
       }
-      const stream = await navigator.mediaDevices.getUserMedia(constraints)
+
+      let stream: MediaStream
+      
+      try {
+        // First attempt with back camera
+        stream = await navigator.mediaDevices.getUserMedia(constraints)
+      } catch (backCameraError) {
+        console.warn('Back camera not available, trying front camera:', backCameraError)
+        
+        // Fallback to front camera
+        constraints = {
+          video: { 
+            facingMode: 'user',
+            width: { ideal: 1280, max: 1920 },
+            height: { ideal: 720, max: 1080 }
+          }
+        }
+        
+        try {
+          stream = await navigator.mediaDevices.getUserMedia(constraints)
+        } catch (frontCameraError) {
+          console.warn('Front camera not available, trying any camera:', frontCameraError)
+          
+          // Final fallback - any camera
+          stream = await navigator.mediaDevices.getUserMedia({ video: true })
+        }
+      }
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         setCameraActive(true)
+        
+        // Ensure video starts playing
+        videoRef.current.onloadedmetadata = () => {
+          if (videoRef.current) {
+            videoRef.current.play().catch(playError => {
+              console.error('Error playing video:', playError)
+            })
+          }
+        }
       }
     } catch (error) {
       console.error('Error accessing camera:', error)
-      // More user-friendly error message
-      alert('No se pudo acceder a la cámara. Por favor, usa la opción de subir desde la galería.')
+      
+      let errorMessage = 'No se pudo acceder a la cámara.'
+      
+      if (error instanceof Error) {
+        if (error.name === 'NotAllowedError') {
+          errorMessage = 'Permiso de cámara denegado. Por favor, permite el acceso a la cámara en la configuración del navegador.'
+        } else if (error.name === 'NotFoundError') {
+          errorMessage = 'No se encontró ninguna cámara en tu dispositivo.'
+        } else if (error.name === 'NotSupportedError') {
+          errorMessage = 'Tu navegador no soporta acceso a la cámara.'
+        }
+      }
+      
+      alert(`${errorMessage} Puedes usar la opción de subir desde la galería.`)
     } finally {
       setLoading(false)
     }

@@ -99,6 +99,27 @@ export async function getRecentBrews(limit = 10) {
   return data
 }
 
+export async function getBrewsWithAnalysis(limit = 20) {
+  const { data, error } = await supabase
+    .from('brews')
+    .select(`
+      *,
+      bag:bags (
+        *,
+        coffee:coffees (
+          *,
+          roaster:roasters (*)
+        )
+      )
+    `)
+    .not('ai_analysis', 'is', null)
+    .order('brew_date', { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+  return data
+}
+
 export async function deleteBag(bagId: string) {
   const { error } = await supabase
     .from('bags')
@@ -130,6 +151,44 @@ export async function getCoffees() {
       )
     `)
     .order('name', { ascending: true })
+
+  if (error) throw error
+  return data
+}
+
+export async function getAllBrews(filters?: {
+  method?: string
+  rating?: number
+  search?: string
+}) {
+  let query = supabase
+    .from('brews')
+    .select(`
+      *,
+      bag:bags (
+        *,
+        coffee:coffees (
+          *,
+          roaster:roasters (*)
+        )
+      )
+    `)
+    .order('brew_date', { ascending: false })
+
+  // Apply filters
+  if (filters?.method && filters.method !== 'all') {
+    query = query.eq('method', filters.method)
+  }
+  
+  if (filters?.rating) {
+    query = query.gte('rating', filters.rating)
+  }
+  
+  if (filters?.search) {
+    query = query.ilike('notes', `%${filters.search}%`)
+  }
+
+  const { data, error } = await query
 
   if (error) throw error
   return data

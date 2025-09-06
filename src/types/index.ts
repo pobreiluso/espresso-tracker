@@ -36,6 +36,20 @@ export type BagWithCoffeeAndRoaster = Bag & {
 
 export type BrewWithBagAndCoffee = Brew & {
   bag: BagWithCoffeeAndRoaster
+  // AI Analysis fields (optional since they may not exist on all brews)
+  ai_analysis?: any | null
+  extraction_quality?: string | null
+  brewing_method_detected?: string | null
+  visual_score?: number | null
+  confidence_score?: number | null
+  has_ai_analysis?: boolean | null
+  extraction_time_seconds?: number | null
+  dose_grams?: number | null
+  yield_grams?: number | null
+  water_temp_celsius?: number | null
+  estimated_volume_ml?: number | null
+  photo_url?: string | null
+  analysis_timestamp?: string | null
 }
 
 // Enums
@@ -81,4 +95,71 @@ export interface CreateBrewForm {
   flavor_tags?: string[]
   notes?: string
   brew_date?: string
+}
+
+// AI Brew Analysis Types
+export interface BrewAnalysis {
+  extraction_analysis: {
+    quality: 'under-extracted' | 'properly-extracted' | 'over-extracted'
+    confidence: number
+    strength: 'light' | 'medium' | 'strong'
+    defects: string[]
+  }
+  brewing_method: {
+    detected_method: 'espresso' | 'pour-over' | 'french-press' | 'aeropress' | 'drip' | 'other'
+    confidence: number
+    indicators: string[]
+  }
+  volume_estimation: {
+    estimated_ml: number
+    confidence: number
+    cup_type: string
+  }
+  crema_analysis: {
+    present: boolean
+    color: 'golden' | 'dark' | 'light' | 'absent'
+    thickness: 'thin' | 'medium' | 'thick'
+    coverage: 'full' | 'partial' | 'patchy' | 'none'
+    quality_score: number
+  }
+  visual_characteristics: {
+    color: string
+    opacity: 'transparent' | 'translucent' | 'opaque'
+    clarity: 'clear' | 'slightly cloudy' | 'cloudy' | 'muddy'
+    surface_appearance: 'smooth' | 'foamy' | 'bubbly' | 'oily'
+  }
+  quality_assessment: {
+    overall_score: number
+    positive_aspects: string[]
+    areas_for_improvement: string[]
+    recommendations: string[]
+  }
+  technical_analysis: {
+    extraction_indicators: {
+      sourness_risk: 'low' | 'medium' | 'high'
+      bitterness_risk: 'low' | 'medium' | 'high'
+      balance_assessment: 'under' | 'balanced' | 'over'
+    }
+    suggested_adjustments: {
+      grind_size: 'finer' | 'current' | 'coarser'
+      dose_adjustment: 'increase' | 'maintain' | 'decrease'
+      time_adjustment: 'shorter' | 'current' | 'longer'
+    }
+  }
+  confidence_overall: number
+  _mock?: boolean
+  _error?: string
+}
+
+export interface CreateBrewWithAnalysisForm {
+  bag_id: string
+  grind_setting?: number
+  extraction_time_seconds?: number
+  dose_grams?: number
+  yield_grams?: number
+  water_temp_celsius?: number
+  rating?: number
+  notes?: string
+  photo?: File
+  brewing_method?: string
 }

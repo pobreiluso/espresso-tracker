@@ -8,6 +8,7 @@ import {
   sanitizeCuppingScore,
   sanitizeFlavorProfile 
 } from './data-validation'
+import { findBestCoffeeMatchByCharacteristics } from './coffee-matching'
 
 export interface ExtractedBagInfo {
   roaster: {
@@ -131,22 +132,43 @@ export async function findOrCreateCoffee(
   roasterId: string
 ) {
   try {
-    // First try to find existing coffee by name and roaster
+    // Get all coffees from the same roaster with detailed characteristics for intelligent matching
     const { data: existingCoffees, error: searchError } = await supabase
       .from('coffees')
-      .select('*')
+      .select('id, name, origin_country, region, farm, process, variety, altitude')
       .eq('roaster_id', roasterId)
-      .ilike('name', coffeeData.name)
-      .limit(1)
 
     if (searchError) {
       console.error('Error searching for coffee:', searchError)
       throw new Error(`Failed to search for coffee: ${searchError.message}`)
     }
 
+    // Use characteristics-based matching to find duplicate coffees
     if (existingCoffees && existingCoffees.length > 0) {
-      return existingCoffees[0]
+      const bestMatch = findBestCoffeeMatchByCharacteristics(coffeeData, existingCoffees, 0.8)
+      
+      if (bestMatch) {
+        console.log(`Found similar coffee by characteristics:`)
+        console.log(`  Target: "${coffeeData.name}" (${coffeeData.origin_country}, ${coffeeData.region}, ${coffeeData.farm}, ${coffeeData.process})`)
+        console.log(`  Match: "${bestMatch.coffee.name}" (${bestMatch.coffee.origin_country}, ${bestMatch.coffee.region}, ${bestMatch.coffee.farm}, ${bestMatch.coffee.process})`)
+        console.log(`  Similarity score: ${bestMatch.score}`)
+        
+        // Get the full coffee record
+        const { data: fullCoffee, error: fetchError } = await supabase
+          .from('coffees')
+          .select('*')
+          .eq('id', bestMatch.coffee.id)
+          .single()
+
+        if (fetchError) {
+          console.error('Error fetching full coffee record:', fetchError)
+        } else {
+          return fullCoffee
+        }
+      }
     }
+
+    console.log(`Creating new coffee: "${coffeeData.name}" (${coffeeData.origin_country}, ${coffeeData.region}, ${coffeeData.farm}, ${coffeeData.process})`)
 
     // Create new coffee with sanitized data
     const coffeeInsert: CoffeeInsert = {
@@ -193,7 +215,8 @@ export async function findOrCreateCoffee(
 
 export async function createBagFromExtractedInfo(
   bagData: ExtractedBagInfo['bag'],
-  coffeeId: string
+  coffeeId: string,
+  photoUrl?: string | null
 ) {
   try {
     const bagInsert: BagInsert = {
@@ -202,6 +225,7 @@ export async function createBagFromExtractedInfo(
       price: sanitizeNumericValue(bagData.price),
       roast_date: sanitizeStringValue(bagData.roast_date) || new Date().toISOString().split('T')[0],
       purchase_location: sanitizeStringValue(bagData.purchase_location),
+      photo_url: photoUrl,
       user_id: MOCK_USER_ID
     }
 
@@ -229,7 +253,7 @@ export async function createBagFromExtractedInfo(
   }
 }
 
-export async function processBagFromPhoto(extractedInfo: ExtractedBagInfo) {
+export async function processBagFromPhoto(extractedInfo: ExtractedBagInfo, photoUrl?: string | null) {
   try {
     console.log('Processing bag from photo with data:', extractedInfo)
     
@@ -245,7 +269,7 @@ export async function processBagFromPhoto(extractedInfo: ExtractedBagInfo) {
     
     // Step 3: Create bag
     console.log('Step 3: Creating bag')
-    const bag = await createBagFromExtractedInfo(extractedInfo.bag, coffee.id)
+    const bag = await createBagFromExtractedInfo(extractedInfo.bag, coffee.id, photoUrl)
     console.log('Bag created:', bag.id)
     
     return {
