@@ -19,16 +19,22 @@ export default function PhotoCapture({ onPhotoTaken, onCancel }: PhotoCapturePro
   const startCamera = async () => {
     try {
       setLoading(true)
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' } // Use back camera on mobile
-      })
+      const constraints = {
+        video: { 
+          facingMode: 'environment', // Use back camera on mobile
+          width: { ideal: 1920 },
+          height: { ideal: 1080 }
+        }
+      }
+      const stream = await navigator.mediaDevices.getUserMedia(constraints)
       if (videoRef.current) {
         videoRef.current.srcObject = stream
         setCameraActive(true)
       }
     } catch (error) {
       console.error('Error accessing camera:', error)
-      alert('Could not access camera. Please use file upload instead.')
+      // More user-friendly error message
+      alert('No se pudo acceder a la cámara. Por favor, usa la opción de subir desde la galería.')
     } finally {
       setLoading(false)
     }
@@ -97,61 +103,90 @@ export default function PhotoCapture({ onPhotoTaken, onCancel }: PhotoCapturePro
               playsInline
               className="w-full h-full object-cover"
             />
-            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+            {/* Camera controls */}
+            <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex items-center space-x-8">
+              {/* Gallery access button */}
+              <button
+                onClick={() => fileInputRef.current?.click()}
+                className="w-12 h-12 bg-black/50 text-white rounded-full flex items-center justify-center backdrop-blur-sm"
+              >
+                <Upload className="w-6 h-6" />
+              </button>
+              
+              {/* Capture button */}
               <button
                 onClick={takePhoto}
-                className="w-16 h-16 bg-primary rounded-full border-4 border-white shadow-lg flex items-center justify-center"
+                className="w-20 h-20 bg-white rounded-full border-4 border-primary shadow-lg flex items-center justify-center active:scale-95 transition-transform"
               >
-                <Camera className="w-8 h-8 text-white" />
+                <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
+                  <Camera className="w-8 h-8 text-white" />
+                </div>
               </button>
+              
+              {/* Flash/settings placeholder */}
+              <div className="w-12 h-12"></div>
             </div>
+
+            {/* Close button */}
             <button
               onClick={stopCamera}
-              className="absolute top-4 left-4 bg-black/50 text-white p-2 rounded-full"
+              className="absolute top-4 left-4 bg-black/50 text-white p-3 rounded-full backdrop-blur-sm"
             >
-              <X className="w-5 h-5" />
+              <X className="w-6 h-6" />
             </button>
+
+            {/* Camera overlay guide */}
+            <div className="absolute inset-4 border-2 border-white/30 rounded-lg flex items-center justify-center">
+              <div className="bg-black/50 text-white px-4 py-2 rounded-lg text-sm backdrop-blur-sm">
+                Centra la etiqueta del café en el marco
+              </div>
+            </div>
           </div>
         ) : (
-          <div className="flex-1 flex flex-col items-center justify-center p-8 space-y-6">
+          <div className="flex-1 flex flex-col items-center justify-center p-6 space-y-6">
             <div className="text-6xl mb-4">📸</div>
             <h3 className="text-xl font-semibold text-center">
-              Take a photo of your coffee bag
+              Fotografía tu café
             </h3>
-            <p className="text-subtext1 text-center max-w-md">
-              Our AI will automatically extract the roaster, coffee name, origin, roast date, and other details from the photo.
+            <p className="text-subtext1 text-center max-w-md text-sm leading-relaxed">
+              Nuestra IA extraerá automáticamente el tostador, nombre del café, origen, fecha de tueste y otros detalles desde la foto.
             </p>
             
-            <div className="space-y-4 w-full max-w-sm">
+            <div className="space-y-3 w-full max-w-sm">
               <button
                 onClick={startCamera}
                 disabled={loading}
-                className="btn btn-primary w-full flex items-center justify-center gap-2"
+                className="btn btn-primary w-full flex items-center justify-center gap-3 h-14 text-base font-medium"
               >
                 {loading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <Loader2 className="w-5 h-5 animate-spin" />
                 ) : (
-                  <Camera className="w-4 h-4" />
+                  <Camera className="w-5 h-5" />
                 )}
-                Open Camera
+                Abrir Cámara
               </button>
               
               <div className="relative">
                 <button
                   onClick={() => fileInputRef.current?.click()}
-                  className="btn btn-secondary w-full flex items-center justify-center gap-2"
+                  className="btn btn-secondary w-full flex items-center justify-center gap-3 h-12 text-sm"
                 >
                   <Upload className="w-4 h-4" />
-                  Upload from Gallery
+                  Subir desde Galería
                 </button>
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept="image/*"
+                  capture="environment"
                   onChange={handleFileSelect}
                   className="hidden"
                 />
               </div>
+            </div>
+
+            <div className="text-xs text-subtext0 text-center max-w-sm">
+              💡 <strong>Consejo:</strong> Asegúrate de que la etiqueta esté bien iluminada y enfocada para mejores resultados
             </div>
           </div>
         )}

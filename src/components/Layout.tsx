@@ -1,4 +1,5 @@
 import Navigation from './Navigation'
+import FloatingActionButton from './FloatingActionButton'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -15,6 +16,9 @@ export default function Layout({ children }: LayoutProps) {
           {children}
         </div>
       </main>
+
+      {/* Floating Action Button for mobile */}
+      <FloatingActionButton />
     </div>
   )
 }
