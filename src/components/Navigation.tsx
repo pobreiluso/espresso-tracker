@@ -3,13 +3,14 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { signOut } from '@/lib/auth'
-import { Home, Coffee, Beaker, Settings, LogOut, ChevronDown, ChevronRight, Building, Bean } from 'lucide-react'
+import { Home, Coffee, Beaker, Settings, LogOut, ChevronDown, ChevronRight, Building, Bean, TrendingUp } from 'lucide-react'
 import { useState } from 'react'
 
 const navigation = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Bags', href: '/bags', icon: Coffee },
   { name: 'Brews', href: '/brews', icon: Beaker },
+  { name: 'Analysis', href: '/analysis', icon: TrendingUp },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
@@ -35,7 +36,7 @@ export default function Navigation() {
       {/* Mobile navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-surface0 border-t border-overlay0 md:hidden z-50">
         <div className="flex items-center justify-around py-2">
-          {navigation.slice(0, 4).map((item) => {
+          {navigation.slice(0, 5).map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
             return (

@@ -1,5 +1,6 @@
 import Navigation from './Navigation'
 import FloatingActionButton from './FloatingActionButton'
+import { AIBrewAnalysisFAB } from './AIBrewAnalysisFAB'
 
 interface LayoutProps {
   children: React.ReactNode
@@ -17,8 +18,9 @@ export default function Layout({ children }: LayoutProps) {
         </div>
       </main>
 
-      {/* Floating Action Button for mobile */}
+      {/* Floating Action Buttons for mobile */}
       <FloatingActionButton />
+      <AIBrewAnalysisFAB />
     </div>
   )
 }

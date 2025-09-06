@@ -99,6 +99,27 @@ export async function getRecentBrews(limit = 10) {
   return data
 }
 
+export async function getBrewsWithAnalysis(limit = 20) {
+  const { data, error } = await supabase
+    .from('brews')
+    .select(`
+      *,
+      bag:bags (
+        *,
+        coffee:coffees (
+          *,
+          roaster:roasters (*)
+        )
+      )
+    `)
+    .not('ai_analysis', 'is', null)
+    .order('brew_date', { ascending: false })
+    .limit(limit)
+
+  if (error) throw error
+  return data
+}
+
 export async function deleteBag(bagId: string) {
   const { error } = await supabase
     .from('bags')
