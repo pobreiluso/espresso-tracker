@@ -7,6 +7,31 @@ export type Json =
   | Json[]
 
 export type Database = {
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       bags: {
@@ -61,55 +86,97 @@ export type Database = {
       }
       brews: {
         Row: {
+          ai_analysis: Json | null
+          analysis_timestamp: string | null
           bag_id: string
           brew_date: string | null
+          brewing_method_detected: string | null
+          confidence_score: number | null
           created_at: string | null
           dose_g: number
+          dose_grams: number | null
+          estimated_volume_ml: number | null
+          extraction_quality: string | null
+          extraction_time_seconds: number | null
           flavor_tags: string[] | null
           grind_setting: string
+          has_ai_analysis: boolean | null
+          has_photo: boolean | null
           id: string
           method: string
           notes: string | null
+          photo_url: string | null
           rating: number
           ratio: number | null
           time_s: number
           user_id: string
+          visual_score: number | null
           water_temp_c: number | null
+          water_temp_celsius: number | null
           yield_g: number
+          yield_grams: number | null
         }
         Insert: {
+          ai_analysis?: Json | null
+          analysis_timestamp?: string | null
           bag_id: string
           brew_date?: string | null
+          brewing_method_detected?: string | null
+          confidence_score?: number | null
           created_at?: string | null
           dose_g: number
+          dose_grams?: number | null
+          estimated_volume_ml?: number | null
+          extraction_quality?: string | null
+          extraction_time_seconds?: number | null
           flavor_tags?: string[] | null
           grind_setting: string
+          has_ai_analysis?: boolean | null
+          has_photo?: boolean | null
           id?: string
           method: string
           notes?: string | null
+          photo_url?: string | null
           rating: number
           ratio?: number | null
           time_s: number
           user_id: string
+          visual_score?: number | null
           water_temp_c?: number | null
+          water_temp_celsius?: number | null
           yield_g: number
+          yield_grams?: number | null
         }
         Update: {
+          ai_analysis?: Json | null
+          analysis_timestamp?: string | null
           bag_id?: string
           brew_date?: string | null
+          brewing_method_detected?: string | null
+          confidence_score?: number | null
           created_at?: string | null
           dose_g?: number
+          dose_grams?: number | null
+          estimated_volume_ml?: number | null
+          extraction_quality?: string | null
+          extraction_time_seconds?: number | null
           flavor_tags?: string[] | null
           grind_setting?: string
+          has_ai_analysis?: boolean | null
+          has_photo?: boolean | null
           id?: string
           method?: string
           notes?: string | null
+          photo_url?: string | null
           rating?: number
           ratio?: number | null
           time_s?: number
           user_id?: string
+          visual_score?: number | null
           water_temp_c?: number | null
+          water_temp_celsius?: number | null
           yield_g?: number
+          yield_grams?: number | null
         }
         Relationships: [
           {
@@ -143,7 +210,7 @@ export type Database = {
           roaster_id: string
           subregion: string | null
           tasting_notes: string | null
-          user_id: string
+          user_id: string | null
           variety: string | null
           variety_details: string | null
         }
@@ -168,7 +235,7 @@ export type Database = {
           roaster_id: string
           subregion?: string | null
           tasting_notes?: string | null
-          user_id: string
+          user_id?: string | null
           variety?: string | null
           variety_details?: string | null
         }
@@ -193,7 +260,7 @@ export type Database = {
           roaster_id?: string
           subregion?: string | null
           tasting_notes?: string | null
-          user_id?: string
+          user_id?: string | null
           variety?: string | null
           variety_details?: string | null
         }
@@ -218,7 +285,7 @@ export type Database = {
           roasting_style: string | null
           size_category: string | null
           specialty: string | null
-          user_id: string
+          user_id: string | null
           website: string | null
         }
         Insert: {
@@ -231,7 +298,7 @@ export type Database = {
           roasting_style?: string | null
           size_category?: string | null
           specialty?: string | null
-          user_id: string
+          user_id?: string | null
           website?: string | null
         }
         Update: {
@@ -244,7 +311,7 @@ export type Database = {
           roasting_style?: string | null
           size_category?: string | null
           specialty?: string | null
-          user_id?: string
+          user_id?: string | null
           website?: string | null
         }
         Relationships: []
@@ -413,6 +480,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {},
   },
