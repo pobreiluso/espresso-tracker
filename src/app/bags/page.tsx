@@ -6,11 +6,13 @@ import AddBagFromPhoto from '@/components/AddBagFromPhoto'
 import BagCard from '@/components/BagCard'
 import PullToRefresh from '@/components/PullToRefresh'
 import { getBags, getOpenBags, getFinishedBags, markBagAsFinished, deleteBag } from '@/lib/queries'
+import { useAuth } from '@/lib/auth-context'
 import { Loader2 } from 'lucide-react'
 
 type FilterType = 'all' | 'open' | 'finished'
 
 export default function BagsPage() {
+  const { user, loading: authLoading } = useAuth()
   const [bags, setBags] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const [filter, setFilter] = useState<FilterType>('all')
@@ -18,6 +20,13 @@ export default function BagsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
 
   const fetchBags = async (isRefresh = false) => {
+    // Don't fetch if user is not authenticated
+    if (!user) {
+      setLoading(false)
+      setIsRefreshing(false)
+      return
+    }
+
     try {
       if (isRefresh) {
         setIsRefreshing(true)
@@ -52,8 +61,14 @@ export default function BagsPage() {
   }
 
   useEffect(() => {
-    fetchBags()
-  }, [filter, refreshKey]) // fetchBags is stable due to being inside the component
+    // Only fetch bags when auth loading is complete and user is available
+    if (!authLoading && user) {
+      fetchBags()
+    } else if (!authLoading && !user) {
+      // Auth loading complete but no user - will be handled by ProtectedRoute
+      setLoading(false)
+    }
+  }, [filter, refreshKey, authLoading, user])
 
   const handleBagAdded = () => {
     setRefreshKey(prev => prev + 1)

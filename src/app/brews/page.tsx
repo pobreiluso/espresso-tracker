@@ -4,10 +4,12 @@ import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Layout from '@/components/Layout'
 import { getAllBrews } from '@/lib/queries'
+import { useAuth } from '@/lib/auth-context'
 import { BrewWithBagAndCoffee } from '@/types'
 import { Star, Coffee, Clock, Thermometer, Scale, Zap, Calendar, Eye } from 'lucide-react'
 
 export default function BrewsPage() {
+  const { user, loading: authLoading } = useAuth()
   const [brews, setBrews] = useState<BrewWithBagAndCoffee[]>([])
   const [loading, setLoading] = useState(true)
   const [filters, setFilters] = useState({
@@ -18,10 +20,22 @@ export default function BrewsPage() {
   const router = useRouter()
 
   useEffect(() => {
-    fetchBrews()
-  }, [filters])
+    // Only fetch brews when auth loading is complete and user is available
+    if (!authLoading && user) {
+      fetchBrews()
+    } else if (!authLoading && !user) {
+      // Auth loading complete but no user - will be handled by ProtectedRoute
+      setLoading(false)
+    }
+  }, [filters, authLoading, user])
 
   const fetchBrews = async () => {
+    // Don't fetch if user is not authenticated
+    if (!user) {
+      setLoading(false)
+      return
+    }
+
     try {
       setLoading(true)
       const data = await getAllBrews(filters.method === 'all' ? undefined : filters)

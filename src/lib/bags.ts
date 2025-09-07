@@ -9,6 +9,7 @@ import {
   sanitizeFlavorProfile 
 } from './data-validation'
 import { findBestCoffeeMatchByCharacteristics } from './coffee-matching'
+import { getCurrentUserId } from './auth-utils'
 
 export interface ExtractedBagInfo {
   roaster: {
@@ -59,9 +60,6 @@ export interface ExtractedBagInfo {
   confidence: number
 }
 
-// Generate a mock user ID for development (since auth is disabled)
-const MOCK_USER_ID = '00000000-0000-0000-0000-000000000000'
-
 export async function extractBagInfoFromImage(file: File): Promise<ExtractedBagInfo> {
   const formData = new FormData()
   formData.append('image', file)
@@ -80,7 +78,7 @@ export async function extractBagInfoFromImage(file: File): Promise<ExtractedBagI
 
 export async function findOrCreateRoaster(roasterData: ExtractedBagInfo['roaster']) {
   try {
-    // First try to find existing roaster by name
+    // First try to find existing roaster by name globally
     const { data: existingRoasters, error: searchError } = await supabase
       .from('roasters')
       .select('*')
@@ -96,8 +94,8 @@ export async function findOrCreateRoaster(roasterData: ExtractedBagInfo['roaster
       return existingRoasters[0]
     }
 
-    // Create new roaster with sanitized data
-    const roasterInsert: RoasterInsert = {
+    // Create new roaster with sanitized data (no user_id - global)
+    const roasterInsert: Omit<RoasterInsert, 'user_id'> = {
       name: sanitizeStringValue(roasterData.name) || roasterData.name,
       country: sanitizeStringValue(roasterData.country),
       website: sanitizeStringValue(roasterData.website),
@@ -105,8 +103,7 @@ export async function findOrCreateRoaster(roasterData: ExtractedBagInfo['roaster
       founded_year: sanitizeYear(roasterData.founded_year),
       specialty: sanitizeStringValue(roasterData.specialty),
       size_category: sanitizeStringValue(roasterData.size_category),
-      roasting_style: sanitizeStringValue(roasterData.roasting_style),
-      user_id: MOCK_USER_ID
+      roasting_style: sanitizeStringValue(roasterData.roasting_style)
     }
 
     const { data: newRoaster, error: insertError } = await supabase
@@ -132,7 +129,7 @@ export async function findOrCreateCoffee(
   roasterId: string
 ) {
   try {
-    // Get all coffees from the same roaster with detailed characteristics for intelligent matching
+    // Get all coffees from the same roaster with detailed characteristics for intelligent matching (global search)
     const { data: existingCoffees, error: searchError } = await supabase
       .from('coffees')
       .select('id, name, origin_country, region, farm, process, variety, altitude')
@@ -170,8 +167,8 @@ export async function findOrCreateCoffee(
 
     console.log(`Creating new coffee: "${coffeeData.name}" (${coffeeData.origin_country}, ${coffeeData.region}, ${coffeeData.farm}, ${coffeeData.process})`)
 
-    // Create new coffee with sanitized data
-    const coffeeInsert: CoffeeInsert = {
+    // Create new coffee with sanitized data (no user_id - global)
+    const coffeeInsert: Omit<CoffeeInsert, 'user_id'> = {
       roaster_id: roasterId,
       name: sanitizeStringValue(coffeeData.name) || coffeeData.name,
       origin_country: sanitizeStringValue(coffeeData.origin_country),
@@ -191,8 +188,7 @@ export async function findOrCreateCoffee(
       cupping_score: sanitizeCuppingScore(coffeeData.cupping_score),
       tasting_notes: sanitizeStringValue(coffeeData.tasting_notes),
       flavor_profile: sanitizeFlavorProfile(coffeeData.flavor_profile),
-      coffee_story: sanitizeStringValue(coffeeData.coffee_story),
-      user_id: MOCK_USER_ID
+      coffee_story: sanitizeStringValue(coffeeData.coffee_story)
     }
 
     const { data: newCoffee, error: insertError } = await supabase
@@ -219,6 +215,11 @@ export async function createBagFromExtractedInfo(
   photoUrl?: string | null
 ) {
   try {
+    const userId = await getCurrentUserId()
+    if (!userId) {
+      throw new Error('User not authenticated')
+    }
+
     // Ensure size_g is always a valid number, default to 250g if unknown
     const sanitizedSizeG = sanitizeNumericValue(bagData.size_g)
     const finalSizeG = sanitizedSizeG !== null ? sanitizedSizeG : 250
@@ -230,7 +231,7 @@ export async function createBagFromExtractedInfo(
       roast_date: sanitizeStringValue(bagData.roast_date) || new Date().toISOString().split('T')[0],
       purchase_location: sanitizeStringValue(bagData.purchase_location),
       photo_url: photoUrl,
-      user_id: MOCK_USER_ID
+      user_id: userId
     }
 
     const { data: newBag, error: insertError } = await supabase
