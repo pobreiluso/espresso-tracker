@@ -61,6 +61,18 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
     try {
       const formData = new FormData()
       formData.append('image', photo)
+      
+      // Add brew parameters as context for analysis
+      const brewContext = {
+        grind_setting: grindSetting,
+        extraction_time: extractionTime,
+        dose_grams: doseGrams,
+        yield_grams: yieldGrams,
+        water_temp: waterTemp,
+        ratio: doseGrams && yieldGrams ? yieldGrams / doseGrams : null
+      }
+      
+      formData.append('brew_data', JSON.stringify(brewContext))
 
       const response = await fetch('/api/analyze-brew', {
         method: 'POST',
