@@ -9,9 +9,20 @@ export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData()
     const image = formData.get('image') as File
+    const brewDataString = formData.get('brew_data') as string
 
     if (!image) {
       return NextResponse.json({ error: 'No image provided' }, { status: 400 })
+    }
+
+    // Parse brew data if provided
+    let brewData = null
+    if (brewDataString) {
+      try {
+        brewData = JSON.parse(brewDataString)
+      } catch (e) {
+        console.error('Failed to parse brew data:', e)
+      }
     }
 
     // Convert image to base64
@@ -28,15 +39,34 @@ export async function POST(request: NextRequest) {
           content: [
             {
               type: "text",
-              text: `Analyze this photo of brewed coffee and provide detailed extraction analysis. Look at:
+              text: `Analyze this photo of brewed coffee and provide detailed extraction analysis.${brewData ? `
 
-1. **Extraction Quality**: Analyze the color, clarity, and visual characteristics to determine if the coffee appears under-extracted, over-extracted, or properly extracted
+**BREW PARAMETERS PROVIDED:**
+${brewData.grind_setting ? `• Grind Setting: ${brewData.grind_setting}` : ''}
+${brewData.extraction_time ? `• Extraction Time: ${brewData.extraction_time} seconds` : ''}
+${brewData.dose_grams ? `• Coffee Dose: ${brewData.dose_grams}g` : ''}
+${brewData.yield_grams ? `• Yield: ${brewData.yield_grams}g` : ''}
+${brewData.water_temp ? `• Water Temperature: ${brewData.water_temp}°C` : ''}
+${brewData.ratio ? `• Brew Ratio: 1:${brewData.ratio.toFixed(1)}` : ''}
+
+Use these parameters to provide more accurate and contextual analysis. Consider how the visual characteristics align with these brewing parameters and provide specific recommendations based on this data.` : ''}
+
+Look at:
+
+1. **Extraction Quality**: Analyze the color, clarity, and visual characteristics to determine if the coffee appears under-extracted, over-extracted, or properly extracted${brewData ? '. Consider the provided extraction time and grind setting in your assessment.' : ''}
 2. **Brewing Method**: Identify the brewing method based on the cup, crema, clarity, and overall appearance
-3. **Volume Estimation**: Estimate the volume of coffee in ml based on cup size and liquid level
+3. **Volume Estimation**: Estimate the volume of coffee in ml based on cup size and liquid level${brewData?.yield_grams ? ` (provided yield: ${brewData.yield_grams}g)` : ''}
 4. **Crema Analysis** (for espresso): Analyze crema color, thickness, texture, and coverage
 5. **Visual Defects**: Identify any visual issues like channeling, uneven extraction, or other problems
-6. **Coffee Strength**: Estimate strength based on opacity and color
-7. **Overall Quality**: Rate the visual quality and provide specific recommendations
+6. **Coffee Strength**: Estimate strength based on opacity and color${brewData?.ratio ? ` (brew ratio: 1:${brewData.ratio.toFixed(1)})` : ''}
+7. **Overall Quality**: Rate the visual quality and provide specific recommendations${brewData ? ' that consider the provided brewing parameters' : ''}
+
+${brewData ? `
+**IMPORTANT**: In your recommendations, provide specific adjustments based on the current parameters:
+- If extraction time was ${brewData.extraction_time ? `${brewData.extraction_time}s` : 'not provided'}, suggest specific time adjustments
+- If grind setting was ${brewData.grind_setting ? `${brewData.grind_setting}` : 'not provided'}, suggest specific grind adjustments (e.g., "try setting 13 instead of ${brewData.grind_setting}")
+- If ratio was ${brewData.ratio ? `1:${brewData.ratio.toFixed(1)}` : 'not provided'}, suggest specific dose/yield changes
+- If water temp was ${brewData.water_temp ? `${brewData.water_temp}°C` : 'not provided'}, suggest temperature adjustments` : ''}
 
 Return ONLY a valid JSON object with this exact structure:
 {
@@ -75,7 +105,7 @@ Return ONLY a valid JSON object with this exact structure:
     "areas_for_improvement": ["could be slightly stronger", "grind finer"],
     "recommendations": [
       "Try grinding 1-2 clicks finer",
-      "Aim for 25-30 second extraction time",
+      "Aim for 25-30 second extraction time", 
       "Check water temperature (should be 93-96°C)"
     ]
   },

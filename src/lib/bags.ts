@@ -219,9 +219,13 @@ export async function createBagFromExtractedInfo(
   photoUrl?: string | null
 ) {
   try {
+    // Ensure size_g is always a valid number, default to 250g if unknown
+    const sanitizedSizeG = sanitizeNumericValue(bagData.size_g)
+    const finalSizeG = sanitizedSizeG !== null ? sanitizedSizeG : 250
+
     const bagInsert: BagInsert = {
       coffee_id: coffeeId,
-      size_g: sanitizeNumericValue(bagData.size_g) || bagData.size_g,
+      size_g: finalSizeG,
       price: sanitizeNumericValue(bagData.price),
       roast_date: sanitizeStringValue(bagData.roast_date) || new Date().toISOString().split('T')[0],
       purchase_location: sanitizeStringValue(bagData.purchase_location),
