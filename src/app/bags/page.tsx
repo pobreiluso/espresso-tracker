@@ -5,6 +5,7 @@ import Layout from '@/components/Layout'
 import AddBagFromPhoto from '@/components/AddBagFromPhoto'
 import BagCard from '@/components/BagCard'
 import PullToRefresh from '@/components/PullToRefresh'
+import AddBrewWithAnalysis from '@/components/AddBrewWithAnalysis'
 import { getBags, getOpenBags, getFinishedBags, markBagAsFinished, deleteBag } from '@/lib/queries'
 import { useAuth } from '@/lib/auth-context'
 import { Loader2 } from 'lucide-react'
@@ -18,6 +19,8 @@ export default function BagsPage() {
   const [filter, setFilter] = useState<FilterType>('all')
   const [refreshKey, setRefreshKey] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [showAddBrew, setShowAddBrew] = useState(false)
+  const [selectedBagId, setSelectedBagId] = useState<string | null>(null)
 
   const fetchBags = async (isRefresh = false) => {
     // Don't fetch if user is not authenticated
@@ -96,6 +99,17 @@ export default function BagsPage() {
     }
   }
 
+  const handleNewBrew = (bagId: string) => {
+    setSelectedBagId(bagId)
+    setShowAddBrew(true)
+  }
+
+  const handleBrewAdded = () => {
+    setShowAddBrew(false)
+    setSelectedBagId(null)
+    setRefreshKey(prev => prev + 1) // Refresh the bags list
+  }
+
   return (
     <Layout>
       <PullToRefresh onRefresh={handleRefresh} isRefreshing={isRefreshing}>
@@ -151,6 +165,7 @@ export default function BagsPage() {
                 bag={bag} 
                 onFinish={() => handleMarkFinished(bag.id)}
                 onDelete={() => handleDeleteBag(bag.id)}
+                onNewBrew={() => handleNewBrew(bag.id)}
               />
             ))}
           </div>
@@ -191,6 +206,15 @@ export default function BagsPage() {
         )}
         </div>
       </PullToRefresh>
+
+      {/* Add Brew Modal */}
+      {showAddBrew && selectedBagId && (
+        <AddBrewWithAnalysis 
+          onClose={() => setShowAddBrew(false)}
+          onSuccess={handleBrewAdded}
+          initialBagId={selectedBagId}
+        />
+      )}
     </Layout>
   )
 }

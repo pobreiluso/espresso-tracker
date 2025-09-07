@@ -12,9 +12,10 @@ import { getCurrentUserId } from '@/lib/auth-utils'
 interface AddBrewWithAnalysisProps {
   onClose: () => void
   onSuccess: () => void
+  initialBagId?: string // Optional bag ID to pre-select
 }
 
-export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisProps) {
+export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBrewWithAnalysisProps) {
   const { settings } = useSettings()
   const [step, setStep] = useState<'form' | 'photo' | 'analyzing' | 'results'>('form')
   const [openBags, setOpenBags] = useState<BagWithCoffeeAndRoaster[]>([])
@@ -35,10 +36,19 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
-  // Load open bags on component mount
-  useState(() => {
-    getOpenBags().then(setOpenBags).catch(console.error)
-  })
+  // Load open bags on component mount and set initial bag if provided
+  useEffect(() => {
+    getOpenBags().then(bags => {
+      setOpenBags(bags)
+      // If initialBagId is provided and exists in the bags, select it
+      if (initialBagId && bags.some(bag => bag.id === initialBagId)) {
+        setSelectedBagId(initialBagId)
+      } else if (bags.length === 1) {
+        // Auto-select if only one bag available
+        setSelectedBagId(bags[0].id)
+      }
+    }).catch(console.error)
+  }, [initialBagId])
 
   const handlePhotoCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]

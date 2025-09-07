@@ -38,6 +38,18 @@ export default function HomePage() {
     }
   }, [authLoading, user])
 
+  // Listen for bag added event from FAB
+  useEffect(() => {
+    const handleBagAdded = () => {
+      if (user) {
+        fetchDashboardData()
+      }
+    }
+
+    window.addEventListener('bagAdded', handleBagAdded)
+    return () => window.removeEventListener('bagAdded', handleBagAdded)
+  }, [user])
+
   const fetchDashboardData = async () => {
     // Don't fetch if user is not authenticated
     if (!user) {

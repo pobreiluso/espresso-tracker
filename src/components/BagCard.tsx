@@ -1,15 +1,21 @@
 'use client'
 
 import { formatDistanceToNow, parseISO } from 'date-fns'
-import { Calendar, MapPin, DollarSign, Coffee, Trash2 } from 'lucide-react'
+import { Calendar, MapPin, DollarSign, Coffee, Trash2, Plus, Eye } from 'lucide-react'
+import { Button } from './ui/Button'
+import { useState } from 'react'
 
 interface BagCardProps {
   bag: any // Will be properly typed when we have the full bag type
   onFinish?: () => void
   onDelete?: () => void
+  onNewBrew?: () => void
 }
 
-export default function BagCard({ bag, onFinish, onDelete }: BagCardProps) {
+export default function BagCard({ bag, onFinish, onDelete, onNewBrew }: BagCardProps) {
+  const [isFinishing, setIsFinishing] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  
   const isOpen = !bag.finish_date
   const roastDate = bag.roast_date ? parseISO(bag.roast_date) : null
   const openDate = bag.open_date ? parseISO(bag.open_date) : null
@@ -17,6 +23,26 @@ export default function BagCard({ bag, onFinish, onDelete }: BagCardProps) {
 
   const daysOpen = openDate ? formatDistanceToNow(openDate) : null
   const daysSinceRoast = roastDate ? formatDistanceToNow(roastDate) : null
+
+  const handleFinish = async () => {
+    if (!onFinish) return
+    setIsFinishing(true)
+    try {
+      await onFinish()
+    } finally {
+      setIsFinishing(false)
+    }
+  }
+
+  const handleDelete = async () => {
+    if (!onDelete) return
+    setIsDeleting(true)
+    try {
+      await onDelete()
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   return (
     <div className={`card p-4 transition-all hover:shadow-md active:scale-[0.98] ${
@@ -94,33 +120,52 @@ export default function BagCard({ bag, onFinish, onDelete }: BagCardProps) {
         </div>
       )}
 
-      <div className="flex gap-2">
+      {/* Modern button system with proper loading states */}
+      <div className="flex gap-3">
         {isOpen && (
           <>
-            <button className="btn btn-primary flex-1 text-sm h-9 font-medium">
-              + Nuevo Brew
-            </button>
-            <button 
-              onClick={onFinish}
-              className="btn btn-secondary text-sm h-9 px-3 whitespace-nowrap"
+            <Button 
+              variant="primary" 
+              size="md" 
+              fullWidth
+              icon={<Plus className="w-4 h-4" />}
+              className="flex-1"
+              onClick={onNewBrew}
+              disabled={!onNewBrew}
+            >
+              Nuevo Brew
+            </Button>
+            <Button 
+              variant="secondary" 
+              size="md"
+              loading={isFinishing}
+              onClick={handleFinish}
+              className="px-4"
             >
               Terminar
-            </button>
+            </Button>
           </>
         )}
         {!isOpen && (
-          <button className="btn btn-secondary flex-1 text-sm h-9">
+          <Button 
+            variant="secondary" 
+            size="md" 
+            fullWidth
+            icon={<Eye className="w-4 h-4" />}
+          >
             Ver Detalles
-          </button>
+          </Button>
         )}
         {onDelete && (
-          <button 
-            onClick={onDelete}
-            className="btn bg-red/10 text-red hover:bg-red hover:text-white active:scale-95 text-sm px-3 h-9 transition-all"
-            title="Eliminar café"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          <Button 
+            variant="destructive"
+            size="md"
+            loading={isDeleting}
+            onClick={handleDelete}
+            icon={<Trash2 className="w-4 h-4" />}
+            title="Eliminar bolsa de café"
+            className="px-3 bg-red/10 text-red hover:bg-red hover:text-base border-red/20"
+          />
         )}
       </div>
     </div>

@@ -2,6 +2,8 @@
 
 import { useState, useRef } from 'react'
 import { Camera, Upload, X, Loader2, RotateCcw } from 'lucide-react'
+import { Button } from './ui/Button'
+import { useErrorToast } from './ui/Toast'
 
 interface CameraCaptureProps {
   onPhotoTaken: (file: File) => void
@@ -19,9 +21,13 @@ export default function CameraCapture({
   const [cameraActive, setCameraActive] = useState(false)
   const [loading, setLoading] = useState(false)
   const [facingMode, setFacingMode] = useState<'environment' | 'user'>('environment')
+  const [switchingCamera, setSwitchingCamera] = useState(false)
+  
   const videoRef = useRef<HTMLVideoElement>(null)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  
+  const showError = useErrorToast()
 
   const startCamera = async () => {
     try {
@@ -97,7 +103,10 @@ export default function CameraCapture({
         }
       }
       
-      alert(`${errorMessage} Puedes usar la opción de subir desde la galería.`)
+      showError(
+        'Error de Cámara',
+        `${errorMessage} Puedes usar la opción de subir desde la galería.`
+      )
     } finally {
       setLoading(false)
     }
@@ -113,9 +122,13 @@ export default function CameraCapture({
   }
 
   const switchCamera = async () => {
+    setSwitchingCamera(true)
     stopCamera()
     setFacingMode(prev => prev === 'environment' ? 'user' : 'environment')
-    setTimeout(() => startCamera(), 100)
+    setTimeout(async () => {
+      await startCamera()
+      setSwitchingCamera(false)
+    }, 100)
   }
 
   const takePhoto = () => {
@@ -218,26 +231,26 @@ export default function CameraCapture({
               </div>
               
               <div className="space-y-3">
-                <button
+                <Button
                   onClick={startCamera}
-                  disabled={loading}
-                  className="w-full py-3 px-4 bg-peach text-base rounded-xl hover:bg-peach/90 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  loading={loading}
+                  variant="primary"
+                  size="lg"
+                  fullWidth
+                  icon={<Camera className="w-5 h-5" />}
                 >
-                  {loading ? (
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                  ) : (
-                    <Camera className="w-5 h-5" />
-                  )}
                   Abrir Cámara
-                </button>
+                </Button>
                 
-                <button
+                <Button
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full py-3 px-4 bg-surface1 text-text rounded-xl hover:bg-surface2 transition-colors flex items-center justify-center gap-2"
+                  variant="secondary"
+                  size="lg"
+                  fullWidth
+                  icon={<Upload className="w-5 h-5" />}
                 >
-                  <Upload className="w-5 h-5" />
                   Subir desde Galería
-                </button>
+                </Button>
               </div>
 
               <div className="text-xs text-subtext0 px-4">

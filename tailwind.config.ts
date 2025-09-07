@@ -67,6 +67,31 @@ const config: Config = {
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
       },
+      keyframes: {
+        'slide-in-from-right-full': {
+          '0%': { transform: 'translateX(100%)' },
+          '100%': { transform: 'translateX(0)' },
+        },
+        'slide-out-to-right-full': {
+          '0%': { transform: 'translateX(0)' },
+          '100%': { transform: 'translateX(100%)' },
+        },
+        'fade-in': {
+          '0%': { opacity: '0' },
+          '100%': { opacity: '1' },
+        },
+        'scale-in': {
+          '0%': { transform: 'scale(0.95)', opacity: '0' },
+          '100%': { transform: 'scale(1)', opacity: '1' },
+        },
+      },
+      animation: {
+        'slide-in-from-right-full': 'slide-in-from-right-full 0.3s ease-out',
+        'slide-out-to-right-full': 'slide-out-to-right-full 0.3s ease-in',
+        'fade-in': 'fade-in 0.2s ease-out',
+        'scale-in': 'scale-in 0.2s ease-out',
+        'in': 'fade-in 0.2s ease-out, scale-in 0.2s ease-out',
+      },
     },
   },
   plugins: [],
