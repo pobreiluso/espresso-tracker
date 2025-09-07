@@ -142,7 +142,7 @@ export default function Navigation() {
             
             {entitiesExpanded && (
               <div className="ml-4 mt-2 space-y-1">
-                {entities.map((item) => {
+                {secondaryNavigation.filter(item => item.href !== '/settings').map((item) => {
                   const Icon = item.icon
                   const isActive = pathname === item.href
                   return (
