@@ -155,7 +155,7 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
         dose_grams: doseGrams || null,
         yield_grams: yieldGrams || null,
         water_temp_celsius: waterTemp || null,
-        ai_analysis: analysis || null,
+        ai_analysis: analysis as any || null,
         extraction_quality: analysis?.extraction_analysis.quality || null,
         brewing_method_detected: analysis?.brewing_method.detected_method || null,
         estimated_volume_ml: analysis?.volume_estimation.estimated_ml || null,

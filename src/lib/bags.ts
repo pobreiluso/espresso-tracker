@@ -94,8 +94,8 @@ export async function findOrCreateRoaster(roasterData: ExtractedBagInfo['roaster
       return existingRoasters[0]
     }
 
-    // Create new roaster with sanitized data (no user_id - global)
-    const roasterInsert: Omit<RoasterInsert, 'user_id'> = {
+    // Create new roaster with sanitized data (user_id null for global access)
+    const roasterInsert: RoasterInsert = {
       name: sanitizeStringValue(roasterData.name) || roasterData.name,
       country: sanitizeStringValue(roasterData.country),
       website: sanitizeStringValue(roasterData.website),
@@ -103,7 +103,8 @@ export async function findOrCreateRoaster(roasterData: ExtractedBagInfo['roaster
       founded_year: sanitizeYear(roasterData.founded_year),
       specialty: sanitizeStringValue(roasterData.specialty),
       size_category: sanitizeStringValue(roasterData.size_category),
-      roasting_style: sanitizeStringValue(roasterData.roasting_style)
+      roasting_style: sanitizeStringValue(roasterData.roasting_style),
+      user_id: null // Global roaster, no specific user
     }
 
     const { data: newRoaster, error: insertError } = await supabase
@@ -167,8 +168,8 @@ export async function findOrCreateCoffee(
 
     console.log(`Creating new coffee: "${coffeeData.name}" (${coffeeData.origin_country}, ${coffeeData.region}, ${coffeeData.farm}, ${coffeeData.process})`)
 
-    // Create new coffee with sanitized data (no user_id - global)
-    const coffeeInsert: Omit<CoffeeInsert, 'user_id'> = {
+    // Create new coffee with sanitized data (user_id null for global access)
+    const coffeeInsert: CoffeeInsert = {
       roaster_id: roasterId,
       name: sanitizeStringValue(coffeeData.name) || coffeeData.name,
       origin_country: sanitizeStringValue(coffeeData.origin_country),
@@ -188,7 +189,8 @@ export async function findOrCreateCoffee(
       cupping_score: sanitizeCuppingScore(coffeeData.cupping_score),
       tasting_notes: sanitizeStringValue(coffeeData.tasting_notes),
       flavor_profile: sanitizeFlavorProfile(coffeeData.flavor_profile),
-      coffee_story: sanitizeStringValue(coffeeData.coffee_story)
+      coffee_story: sanitizeStringValue(coffeeData.coffee_story),
+      user_id: null // Global coffee, no specific user
     }
 
     const { data: newCoffee, error: insertError } = await supabase
