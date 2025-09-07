@@ -25,8 +25,10 @@ export function AIBrewAnalysisFAB() {
         <AddBrewWithAnalysis
           onClose={() => setShowAnalysis(false)}
           onSuccess={() => {
-            // Could trigger a refresh of the brews list here
             console.log('Brew analysis saved successfully')
+            setShowAnalysis(false)
+            // Trigger a page refresh to update the lists
+            window.location.reload()
           }}
         />
       )}

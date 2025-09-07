@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Layout from '@/components/Layout'
 import AddBagFromPhoto from '@/components/AddBagFromPhoto'
 import { getDashboardStats, getOpenBags, getRecentBrews } from '@/lib/queries'
+import { useAuth } from '@/lib/auth-context'
 import { BagWithCoffeeAndRoaster, BrewWithBagAndCoffee } from '@/types'
 import { Coffee, Calendar, Star } from 'lucide-react'
 
@@ -16,6 +17,7 @@ interface DashboardStats {
 }
 
 export default function HomePage() {
+  const { user, loading: authLoading } = useAuth()
   const [stats, setStats] = useState<DashboardStats>({
     openBags: 0,
     totalBrews: 0,
@@ -27,10 +29,22 @@ export default function HomePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchDashboardData()
-  }, [])
+    // Only fetch data when auth loading is complete and user is available
+    if (!authLoading && user) {
+      fetchDashboardData()
+    } else if (!authLoading && !user) {
+      // Auth loading complete but no user - will be handled by ProtectedRoute
+      setLoading(false)
+    }
+  }, [authLoading, user])
 
   const fetchDashboardData = async () => {
+    // Don't fetch if user is not authenticated
+    if (!user) {
+      setLoading(false)
+      return
+    }
+
     try {
       const [statsData, bagsData, brewsData] = await Promise.all([
         getDashboardStats(),

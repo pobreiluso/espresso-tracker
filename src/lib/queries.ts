@@ -1,6 +1,12 @@
 import { supabase } from './supabase'
+import { getCurrentUserId } from './auth-utils'
 
 export async function getBags() {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    throw new Error('User not authenticated')
+  }
+
   const { data, error } = await supabase
     .from('bags')
     .select(`
@@ -10,6 +16,7 @@ export async function getBags() {
         roaster:roasters (*)
       )
     `)
+    .eq('user_id', userId)
     .order('created_at', { ascending: false })
 
   if (error) throw error
@@ -17,6 +24,11 @@ export async function getBags() {
 }
 
 export async function getOpenBags() {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    throw new Error('User not authenticated')
+  }
+
   const { data, error } = await supabase
     .from('bags')
     .select(`
@@ -26,6 +38,7 @@ export async function getOpenBags() {
         roaster:roasters (*)
       )
     `)
+    .eq('user_id', userId)
     .is('finish_date', null)
     .order('created_at', { ascending: false })
 
@@ -34,6 +47,11 @@ export async function getOpenBags() {
 }
 
 export async function getFinishedBags() {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    throw new Error('User not authenticated')
+  }
+
   const { data, error } = await supabase
     .from('bags')
     .select(`
@@ -43,6 +61,7 @@ export async function getFinishedBags() {
         roaster:roasters (*)
       )
     `)
+    .eq('user_id', userId)
     .not('finish_date', 'is', null)
     .order('finish_date', { ascending: false })
 
@@ -51,10 +70,16 @@ export async function getFinishedBags() {
 }
 
 export async function markBagAsFinished(bagId: string) {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    throw new Error('User not authenticated')
+  }
+
   const { data, error } = await supabase
     .from('bags')
     .update({ finish_date: new Date().toISOString().split('T')[0] })
     .eq('id', bagId)
+    .eq('user_id', userId)
     .select(`
       *,
       coffee:coffees (
@@ -69,10 +94,16 @@ export async function markBagAsFinished(bagId: string) {
 }
 
 export async function getBrewsForBag(bagId: string) {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    throw new Error('User not authenticated')
+  }
+
   const { data, error } = await supabase
     .from('brews')
     .select('*')
     .eq('bag_id', bagId)
+    .eq('user_id', userId)
     .order('brew_date', { ascending: false })
 
   if (error) throw error
@@ -80,6 +111,11 @@ export async function getBrewsForBag(bagId: string) {
 }
 
 export async function getRecentBrews(limit = 10) {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    throw new Error('User not authenticated')
+  }
+
   const { data, error } = await supabase
     .from('brews')
     .select(`
@@ -92,6 +128,7 @@ export async function getRecentBrews(limit = 10) {
         )
       )
     `)
+    .eq('user_id', userId)
     .order('brew_date', { ascending: false })
     .limit(limit)
 
@@ -100,6 +137,11 @@ export async function getRecentBrews(limit = 10) {
 }
 
 export async function getBrewsWithAnalysis(limit = 20) {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    throw new Error('User not authenticated')
+  }
+
   const { data, error } = await supabase
     .from('brews')
     .select(`
@@ -112,6 +154,7 @@ export async function getBrewsWithAnalysis(limit = 20) {
         )
       )
     `)
+    .eq('user_id', userId)
     .not('ai_analysis', 'is', null)
     .order('brew_date', { ascending: false })
     .limit(limit)
@@ -121,16 +164,23 @@ export async function getBrewsWithAnalysis(limit = 20) {
 }
 
 export async function deleteBag(bagId: string) {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    throw new Error('User not authenticated')
+  }
+
   const { error } = await supabase
     .from('bags')
     .delete()
     .eq('id', bagId)
+    .eq('user_id', userId)
 
   if (error) throw error
   return true
 }
 
 export async function getRoasters() {
+  // Roasters are now global - all users can see all roasters
   const { data, error } = await supabase
     .from('roasters')
     .select('*')
@@ -141,6 +191,7 @@ export async function getRoasters() {
 }
 
 export async function getCoffees() {
+  // Coffees are now global - all users can see all coffees
   const { data, error } = await supabase
     .from('coffees')
     .select(`
@@ -161,6 +212,11 @@ export async function getAllBrews(filters?: {
   rating?: number
   search?: string
 }) {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    throw new Error('User not authenticated')
+  }
+
   let query = supabase
     .from('brews')
     .select(`
@@ -173,6 +229,7 @@ export async function getAllBrews(filters?: {
         )
       )
     `)
+    .eq('user_id', userId)
     .order('brew_date', { ascending: false })
 
   // Apply filters
@@ -195,23 +252,31 @@ export async function getAllBrews(filters?: {
 }
 
 export async function getDashboardStats() {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    throw new Error('User not authenticated')
+  }
+
   try {
     const [openBagsResult, totalBrewsResult, recentBrewsResult, weeklyBrewsResult] = await Promise.all([
       // Open bags count
       supabase
         .from('bags')
         .select('id', { count: 'exact' })
+        .eq('user_id', userId)
         .is('finish_date', null),
       
       // Total brews count
       supabase
         .from('brews')
-        .select('id', { count: 'exact' }),
+        .select('id', { count: 'exact' })
+        .eq('user_id', userId),
       
       // Recent brews for average rating
       supabase
         .from('brews')
         .select('rating')
+        .eq('user_id', userId)
         .order('brew_date', { ascending: false })
         .limit(10),
       
@@ -219,6 +284,7 @@ export async function getDashboardStats() {
       supabase
         .from('brews')
         .select('id', { count: 'exact' })
+        .eq('user_id', userId)
         .gte('brew_date', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
     ])
 
@@ -247,4 +313,31 @@ export async function getDashboardStats() {
       weeklyBrews: 0
     }
   }
+}
+
+// New function to get a single brew with details for the detail page
+export async function getBrewById(brewId: string) {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    throw new Error('User not authenticated')
+  }
+
+  const { data, error } = await supabase
+    .from('brews')
+    .select(`
+      *,
+      bag:bags (
+        *,
+        coffee:coffees (
+          *,
+          roaster:roasters (*)
+        )
+      )
+    `)
+    .eq('id', brewId)
+    .eq('user_id', userId)
+    .single()
+
+  if (error) throw error
+  return data
 }

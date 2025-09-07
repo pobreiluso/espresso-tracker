@@ -2,7 +2,8 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { signOut } from '@/lib/auth'
+import { useAuth } from '@/lib/auth-context'
+import { UserMenu } from '@/components/auth/UserMenu'
 import { Home, Coffee, Beaker, Settings, LogOut, ChevronDown, ChevronRight, Building, Bean, TrendingUp, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
@@ -23,6 +24,7 @@ const entities = [
 export default function Navigation() {
   const pathname = usePathname()
   const [entitiesExpanded, setEntitiesExpanded] = useState(false)
+  const { signOut } = useAuth()
 
   const handleSignOut = async () => {
     try {
@@ -126,6 +128,11 @@ export default function Navigation() {
       <nav className="hidden md:flex md:fixed md:top-0 md:left-0 md:bottom-0 md:w-64 md:bg-surface0 md:border-r md:border-overlay0 md:flex-col md:p-4">
         <div className="mb-8">
           <h1 className="text-xl font-bold text-primary">☕ Coffee Tracker</h1>
+        </div>
+        
+        {/* User Menu */}
+        <div className="mb-6">
+          <UserMenu />
         </div>
         
         <div className="flex-1 space-y-2">

@@ -7,6 +7,7 @@ import { BagWithCoffeeAndRoaster, CreateBrewWithAnalysisForm, BrewAnalysis } fro
 import { supabase } from '@/lib/supabase'
 import { uploadPhoto, generatePhotoFilename, compressImage } from '@/lib/storage'
 import { useSettings } from '@/lib/useSettings'
+import { getCurrentUserId } from '@/lib/auth-utils'
 
 interface AddBrewWithAnalysisProps {
   onClose: () => void
@@ -99,6 +100,12 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
     setError(null)
 
     try {
+      // Get the current authenticated user ID
+      const userId = await getCurrentUserId()
+      if (!userId) {
+        throw new Error('User not authenticated')
+      }
+
       // Upload photo first
       let photoUrl: string | null = null
       if (photo) {
@@ -157,7 +164,7 @@ export function AddBrewWithAnalysis({ onClose, onSuccess }: AddBrewWithAnalysisP
         photo_url: photoUrl,
         has_photo: !!photoUrl,
         has_ai_analysis: !!analysis,
-        user_id: '00000000-0000-0000-0000-000000000000' // Dummy user ID for dev
+        user_id: userId // Use real authenticated user ID
       }
 
       console.log('Inserting brew data:', brewData)
