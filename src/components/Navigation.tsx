@@ -7,19 +7,23 @@ import { UserMenu } from '@/components/auth/UserMenu'
 import { Home, Coffee, Beaker, Settings, LogOut, ChevronDown, ChevronRight, Building, Bean, TrendingUp, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 
-const navigation = [
+// Primary navigation items (always visible on mobile)
+const primaryNavigation = [
   { name: 'Dashboard', href: '/', icon: Home },
   { name: 'Bags', href: '/bags', icon: Coffee },
   { name: 'Brews', href: '/brews', icon: Beaker },
   { name: 'Analysis', href: '/analysis', icon: TrendingUp },
+]
+
+// Secondary navigation (desktop only, or accessible through simplified mobile menu)
+const secondaryNavigation = [
   { name: 'Manage', href: '/manage', icon: Trash2 },
+  { name: 'Roasters', href: '/roasters', icon: Building },
+  { name: 'Coffees', href: '/coffees', icon: Bean },
   { name: 'Settings', href: '/settings', icon: Settings },
 ]
 
-const entities = [
-  { name: 'Roasters', href: '/roasters', icon: Building },
-  { name: 'Coffees', href: '/coffees', icon: Bean },
-]
+const allNavigation = [...primaryNavigation, ...secondaryNavigation]
 
 export default function Navigation() {
   const pathname = usePathname()
@@ -36,34 +40,32 @@ export default function Navigation() {
 
   return (
     <>
-      {/* Mobile navigation */}
+      {/* Simplified Mobile navigation */}
       <nav className="fixed bottom-0 left-0 right-0 bg-surface0/95 backdrop-blur-sm border-t border-surface1 md:hidden z-50">
-        <div className="flex items-center justify-around py-1">
-          {navigation.slice(0, 6).map((item) => {
+        <div className="flex items-center justify-around py-2 px-2">
+          {primaryNavigation.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
             
-            // Translate names to Spanish
+            // Coffee-specific Spanish names
             const spanishNames: Record<string, string> = {
-              'Dashboard': 'Inicio',
-              'Bags': 'Bolsas',
-              'Brews': 'Cafés',
-              'Analysis': 'Análisis',
-              'Manage': 'Gestionar',
-              'Settings': 'Config'
+              'Dashboard': 'Cafetería',
+              'Bags': 'Colección', 
+              'Brews': 'Extracciones',
+              'Analysis': 'Cata'
             }
             
             return (
               <Link
                 key={item.name}
                 href={item.href}
-                className={`flex flex-col items-center py-2 px-1 rounded-lg transition-all duration-200 min-w-0 ${
+                className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-200 min-h-[60px] min-w-[64px] ${
                   isActive
-                    ? 'text-peach bg-peach/10'
-                    : 'text-subtext0 hover:text-text hover:bg-surface1'
+                    ? 'text-peach bg-peach/10 scale-105'
+                    : 'text-subtext0 hover:text-text hover:bg-surface1 active:scale-95'
                 }`}
               >
-                <Icon className={`w-5 h-5 mb-0.5 transition-transform ${isActive ? 'scale-110' : ''}`} />
+                <Icon className={`w-6 h-6 mb-1 transition-all ${isActive ? 'scale-110' : ''}`} />
                 <span className="text-[10px] font-medium leading-tight text-center">
                   {spanishNames[item.name] || item.name}
                 </span>
@@ -71,56 +73,25 @@ export default function Navigation() {
             )
           })}
           
-          {/* Mobile menu for entities */}
-          <div className="relative">
-            <button
-              onClick={() => setEntitiesExpanded(!entitiesExpanded)}
-              className={`flex flex-col items-center py-2 px-2 rounded-lg transition-colors ${
-                entities.some(e => pathname === e.href)
-                  ? 'text-primary bg-surface1'
-                  : 'text-subtext0 hover:text-text hover:bg-surface1'
-              }`}
-            >
-              <Building className="w-5 h-5 mb-1" />
-              <span className="text-xs">More</span>
-            </button>
-            
-            {entitiesExpanded && (
-              <div className="absolute bottom-full mb-2 left-1/2 transform -translate-x-1/2 bg-surface0 border border-overlay0 rounded-lg shadow-lg min-w-[120px]">
-                {entities.map((item) => {
-                  const Icon = item.icon
-                  const isActive = pathname === item.href
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      onClick={() => setEntitiesExpanded(false)}
-                      className={`flex items-center px-3 py-2 text-sm rounded-lg transition-colors ${
-                        isActive
-                          ? 'text-primary bg-surface1'
-                          : 'text-subtext0 hover:text-text hover:bg-surface1'
-                      }`}
-                    >
-                      <Icon className="w-4 h-4 mr-2" />
-                      {item.name}
-                    </Link>
-                  )
-                })}
-                <div className="border-t border-overlay0 mt-1 pt-1">
-                  <button
-                    onClick={() => {
-                      handleSignOut()
-                      setEntitiesExpanded(false)
-                    }}
-                    className="flex items-center w-full px-3 py-2 text-sm rounded-lg transition-colors text-subtext0 hover:text-destructive hover:bg-surface1"
-                  >
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Sign Out
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
+          {/* Settings shortcut - more accessible */}
+          <Link
+            href="/settings"
+            className={`flex flex-col items-center py-2 px-3 rounded-xl transition-all duration-200 min-h-[60px] min-w-[64px] ${
+              pathname === '/settings'
+                ? 'text-peach bg-peach/10 scale-105'
+                : 'text-subtext0 hover:text-text hover:bg-surface1 active:scale-95'
+            }`}
+          >
+            <Settings className={`w-6 h-6 mb-1 transition-all ${pathname === '/settings' ? 'scale-110' : ''}`} />
+            <span className="text-[10px] font-medium leading-tight text-center">
+              Config
+            </span>
+          </Link>
+        </div>
+        
+        {/* Quick access indicator */}
+        <div className="absolute top-0 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
+          <div className="w-8 h-1 bg-surface2 rounded-full" />
         </div>
       </nav>
 
@@ -136,7 +107,7 @@ export default function Navigation() {
         </div>
         
         <div className="flex-1 space-y-2">
-          {navigation.map((item) => {
+          {allNavigation.map((item) => {
             const Icon = item.icon
             const isActive = pathname === item.href
             return (
@@ -171,7 +142,7 @@ export default function Navigation() {
             
             {entitiesExpanded && (
               <div className="ml-4 mt-2 space-y-1">
-                {entities.map((item) => {
+                {secondaryNavigation.filter(item => item.href !== '/settings').map((item) => {
                   const Icon = item.icon
                   const isActive = pathname === item.href
                   return (

@@ -5,9 +5,11 @@ import Layout from '@/components/Layout'
 import AddBagFromPhoto from '@/components/AddBagFromPhoto'
 import BagCard from '@/components/BagCard'
 import PullToRefresh from '@/components/PullToRefresh'
+import { AddBrewWithAnalysis } from '@/components/AddBrewWithAnalysis'
 import { getBags, getOpenBags, getFinishedBags, markBagAsFinished, deleteBag } from '@/lib/queries'
 import { useAuth } from '@/lib/auth-context'
 import { Loader2 } from 'lucide-react'
+import { LoadingBags } from '@/components/ui/CoffeeLoader'
 
 type FilterType = 'all' | 'open' | 'finished'
 
@@ -18,6 +20,8 @@ export default function BagsPage() {
   const [filter, setFilter] = useState<FilterType>('all')
   const [refreshKey, setRefreshKey] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [showAddBrew, setShowAddBrew] = useState(false)
+  const [selectedBagId, setSelectedBagId] = useState<string | null>(null)
 
   const fetchBags = async (isRefresh = false) => {
     // Don't fetch if user is not authenticated
@@ -96,14 +100,25 @@ export default function BagsPage() {
     }
   }
 
+  const handleNewBrew = (bagId: string) => {
+    setSelectedBagId(bagId)
+    setShowAddBrew(true)
+  }
+
+  const handleBrewAdded = () => {
+    setShowAddBrew(false)
+    setSelectedBagId(null)
+    setRefreshKey(prev => prev + 1) // Refresh the bags list
+  }
+
   return (
     <Layout>
       <PullToRefresh onRefresh={handleRefresh} isRefreshing={isRefreshing}>
         <div className="space-y-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-text mb-2">Mis Cafés</h1>
-              <p className="text-subtext1">Gestiona tu colección de cafés</p>
+              <h1 className="text-3xl font-bold text-text mb-2">Mi Colección ☕</h1>
+              <p className="text-subtext1">Tus cafés especiales organizados</p>
             </div>
             <div className="hidden md:flex gap-2">
               <AddBagFromPhoto onSuccess={handleBagAdded} />
@@ -138,7 +153,7 @@ export default function BagsPage() {
         {/* Loading state */}
         {loading && (
           <div className="flex items-center justify-center py-12">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
+            <LoadingBags />
           </div>
         )}
 
@@ -151,6 +166,7 @@ export default function BagsPage() {
                 bag={bag} 
                 onFinish={() => handleMarkFinished(bag.id)}
                 onDelete={() => handleDeleteBag(bag.id)}
+                onNewBrew={() => handleNewBrew(bag.id)}
               />
             ))}
           </div>
@@ -165,13 +181,13 @@ export default function BagsPage() {
                  filter === 'open' ? '☕' : '✅'}
               </div>
               <h2 className="text-xl font-semibold mb-2">
-                {filter === 'all' ? 'Empieza con una foto' :
-                 filter === 'open' ? 'No hay cafés abiertos' :
-                 'No hay cafés terminados'}
+                {filter === 'all' ? '¡Tu primer café te espera!' :
+                 filter === 'open' ? 'No hay cafés listos para catar' :
+                 'No has terminado ningún café'}
               </h2>
               <p className="text-subtext1 mb-6 text-sm leading-relaxed">
                 {filter === 'all' ? 
-                  'Simplemente toma una foto de tu bolsa de café y nuestra IA extraerá automáticamente todos los detalles: tostador, nombre del café, origen, fecha de tueste, ¡y mucho más!' :
+                  'Captura cualquier bolsa de café especial y nuestra IA extraerá automáticamente el tostador, origen, notas de cata, fecha de tueste y todos los detalles que un cafetero necesita.' :
                  filter === 'open' ?
                   'Todos tus cafés están terminados. ¡Añade un nuevo café para empezar a hacer seguimiento!' :
                   'Aún no has terminado ningún café.'}
@@ -191,6 +207,15 @@ export default function BagsPage() {
         )}
         </div>
       </PullToRefresh>
+
+      {/* Add Brew Modal */}
+      {showAddBrew && selectedBagId && (
+        <AddBrewWithAnalysis 
+          onClose={() => setShowAddBrew(false)}
+          onSuccess={handleBrewAdded}
+          initialBagId={selectedBagId}
+        />
+      )}
     </Layout>
   )
 }

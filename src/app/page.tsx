@@ -8,6 +8,7 @@ import { getDashboardStats, getOpenBags, getRecentBrews } from '@/lib/queries'
 import { useAuth } from '@/lib/auth-context'
 import { BagWithCoffeeAndRoaster, BrewWithBagAndCoffee } from '@/types'
 import { Coffee, Calendar, Star } from 'lucide-react'
+import { CoffeeLoader } from '@/components/ui/CoffeeLoader'
 
 interface DashboardStats {
   openBags: number
@@ -38,6 +39,18 @@ export default function HomePage() {
     }
   }, [authLoading, user])
 
+  // Listen for bag added event from FAB
+  useEffect(() => {
+    const handleBagAdded = () => {
+      if (user) {
+        fetchDashboardData()
+      }
+    }
+
+    window.addEventListener('bagAdded', handleBagAdded)
+    return () => window.removeEventListener('bagAdded', handleBagAdded)
+  }, [user])
+
   const fetchDashboardData = async () => {
     // Don't fetch if user is not authenticated
     if (!user) {
@@ -66,7 +79,7 @@ export default function HomePage() {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-[400px]">
-          <div className="animate-spin h-8 w-8 border-2 border-peach border-t-transparent rounded-full"></div>
+          <CoffeeLoader message="Preparando tu cafetería..." size="lg" />
         </div>
       </Layout>
     )
@@ -76,55 +89,73 @@ export default function HomePage() {
     <Layout>
       <div className="space-y-8">
         <div>
-          <h1 className="text-3xl font-bold text-text mb-2">Dashboard</h1>
-          <p className="text-subtext1">Track your specialty coffee journey</p>
+          <h1 className="text-3xl font-bold text-text mb-2">Mi Cafetería ☕</h1>
+          <p className="text-subtext1">Tu ritual diario del café especial</p>
         </div>
 
-        {/* Stats */}
+        {/* Coffee Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="card p-4">
-            <div className="text-2xl font-bold text-peach">{stats.openBags}</div>
-            <div className="text-sm text-subtext1">Bolsas Abiertas</div>
-          </div>
-          <div className="card p-4">
-            <div className="text-2xl font-bold text-green">{stats.totalBrews}</div>
-            <div className="text-sm text-subtext1">Total Cafés</div>
-          </div>
-          <div className="card p-4">
-            <div className="text-2xl font-bold text-yellow">
-              {stats.avgRating ? stats.avgRating.toFixed(1) : '-'}
+          <div className="card p-4 hover:shadow-lg transition-all duration-200">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-2xl">📦</span>
+              <div className="text-2xl font-bold text-peach">{stats.openBags}</div>
             </div>
-            <div className="text-sm text-subtext1">Rating Medio</div>
+            <div className="text-sm text-subtext1">Cafés Abiertos</div>
           </div>
-          <div className="card p-4">
-            <div className="text-2xl font-bold text-mauve">{stats.weeklyBrews}</div>
+          <div className="card p-4 hover:shadow-lg transition-all duration-200">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-2xl">☕</span>
+              <div className="text-2xl font-bold text-green">{stats.totalBrews}</div>
+            </div>
+            <div className="text-sm text-subtext1">Extracciones</div>
+          </div>
+          <div className="card p-4 hover:shadow-lg transition-all duration-200">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-2xl">⭐</span>
+              <div className="text-2xl font-bold text-yellow">
+                {stats.avgRating ? stats.avgRating.toFixed(1) : '-'}
+              </div>
+            </div>
+            <div className="text-sm text-subtext1">Calidad Media</div>
+          </div>
+          <div className="card p-4 hover:shadow-lg transition-all duration-200">
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-2xl">📈</span>
+              <div className="text-2xl font-bold text-mauve">{stats.weeklyBrews}</div>
+            </div>
             <div className="text-sm text-subtext1">Esta Semana</div>
           </div>
         </div>
 
-        {/* Quick Actions */}
+        {/* Coffee Actions */}
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="card p-6">
-            <h2 className="text-xl font-semibold mb-4">Acciones Rápidas</h2>
+          <div className="card p-6 border-l-4 border-l-peach">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-2xl">🚀</span>
+              <h2 className="text-xl font-semibold">Acciones Rápidas</h2>
+            </div>
             <div className="space-y-3">
               <AddBagFromPhoto />
               <button 
                 onClick={() => (document.querySelector('[aria-label="Análisis de Extracción"]') as HTMLButtonElement)?.click()}
                 className="btn btn-secondary w-full inline-flex items-center justify-center"
               >
-                + Nuevo Análisis
+                🔬 Analizar Extracción
               </button>
             </div>
           </div>
 
-          <div className="card p-6">
-            <h2 className="text-xl font-semibold mb-4">Bolsas Abiertas</h2>
+          <div className="card p-6 border-l-4 border-l-green">
+            <div className="flex items-center gap-3 mb-4">
+              <span className="text-2xl">🫘</span>
+              <h2 className="text-xl font-semibold">Cafés Abiertos</h2>
+            </div>
             {openBags.length === 0 ? (
               <div className="text-center py-8">
-                <Coffee className="h-12 w-12 text-subtext0 mx-auto mb-4" />
-                <p className="text-subtext1">Sin bolsas abiertas</p>
-                <p className="text-sm text-subtext0 mt-2">
-                  Toma una foto de tu primera bolsa para empezar
+                <div className="text-6xl mb-4">📸</div>
+                <p className="text-subtext1 font-medium">¡Hora del primer café!</p>
+                <p className="text-sm text-subtext0 mt-2 leading-relaxed">
+                  Captura tu bolsa de café especial<br/>y comienza tu ritual de cata
                 </p>
               </div>
             ) : (
@@ -155,20 +186,23 @@ export default function HomePage() {
         </div>
 
         {/* Recent Brews */}
-        <div className="card p-6">
+        <div className="card p-6 border-l-4 border-l-yellow">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-semibold">Cafés Recientes</h2>
-            <Link href="/brews" className="text-sm text-peach hover:text-rosewater transition-colors">
-              Ver todos →
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">🍃</span>
+              <h2 className="text-xl font-semibold">Últimas Extracciones</h2>
+            </div>
+            <Link href="/brews" className="text-sm text-peach hover:text-rosewater transition-colors font-medium">
+              Ver historial →
             </Link>
           </div>
           
           {recentBrews.length === 0 ? (
             <div className="text-center py-8">
-              <Calendar className="h-12 w-12 text-subtext0 mx-auto mb-4" />
-              <p className="text-subtext1">Sin cafés aún</p>
-              <p className="text-sm text-subtext0 mt-2">
-                Comienza a hacer y trackear tus sesiones
+              <div className="text-6xl mb-4">⏰</div>
+              <p className="text-subtext1 font-medium">¡Primera extracción pendiente!</p>
+              <p className="text-sm text-subtext0 mt-2 leading-relaxed">
+                Prepara tu primera taza y registra<br/>los secretos de una extracción perfecta
               </p>
             </div>
           ) : (

@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { X, Mail, Lock, User, Eye, EyeOff, Loader2 } from 'lucide-react'
 import { useAuth } from '@/lib/auth-context'
+import { Input } from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
 
 interface AuthModalProps {
   isOpen: boolean

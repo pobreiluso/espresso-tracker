@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import { AuthProvider } from '@/lib/auth-context'
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute'
+import { ToastProvider } from '@/components/ui/Toast'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -22,11 +23,13 @@ export default function RootLayout({
     <html lang="en">
       <body className={inter.className}>
         <AuthProvider>
-          <ProtectedRoute>
-            <div className="min-h-screen bg-background">
-              {children}
-            </div>
-          </ProtectedRoute>
+          <ToastProvider>
+            <ProtectedRoute>
+              <div className="min-h-screen bg-background">
+                {children}
+              </div>
+            </ProtectedRoute>
+          </ToastProvider>
         </AuthProvider>
       </body>
     </html>
