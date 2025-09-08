@@ -37,7 +37,7 @@ export default function FloatingActionButton() {
           
           <button
             onClick={handleOpenModal}
-            className="relative w-16 h-16 bg-peach hover:bg-peach/90 active:bg-peach/95 rounded-full shadow-lg hover:shadow-xl flex items-center justify-center transition-all duration-300 hover:scale-110 active:scale-95 group touch-manipulation"
+            className="relative w-16 h-16 bg-peach hover:bg-peach/90 active:bg-peach/95 rounded-full shadow-lg hover:shadow-xl hover:shadow-peach/30 flex items-center justify-center transition-all duration-300 ease-out hover:scale-110 active:scale-95 group touch-manipulation hover:-translate-y-1 active:translate-y-0 before:absolute before:inset-0 before:rounded-full before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-10 before:bg-gradient-to-r before:from-white before:to-transparent"
             title="Añadir bolsa de café"
             disabled={showAddBag}
           >

@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import PhotoCapture from './PhotoCapture'
 import { Camera, Loader2, Check, X, Edit, ChevronDown, ChevronUp } from 'lucide-react'
+import { Button } from './ui/Button'
 import { extractBagInfoFromImage, processBagFromPhoto, ExtractedBagInfo } from '@/lib/bags'
 import { uploadPhoto, compressImage, generatePhotoFilename } from '@/lib/storage'
 
@@ -17,6 +18,7 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
   const [extractedInfo, setExtractedInfo] = useState<ExtractedBagInfo | null>(null)
   const [error, setError] = useState<string>('')
   const [editedInfo, setEditedInfo] = useState<ExtractedBagInfo | null>(null)
+  const [isSaving, setIsSaving] = useState(false)
   const [showDetails, setShowDetails] = useState(false)
   const [originalPhoto, setOriginalPhoto] = useState<File | null>(null)
 
@@ -39,6 +41,7 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
   const handleSave = async () => {
     if (!editedInfo || !originalPhoto) return
 
+    setIsSaving(true)
     setStep('saving')
     try {
       // Compress and upload the photo first
@@ -72,6 +75,7 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
     } catch (err) {
       setError('Failed to save bag. Please try again.')
       setStep('error')
+      setIsSaving(false)
     }
   }
 
@@ -100,13 +104,15 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
 
   if (step === 'initial') {
     return (
-      <button 
+      <Button
         onClick={() => setStep('capture')}
-        className="btn btn-primary flex items-center gap-2"
+        variant="primary"
+        size="md"
+        icon={<Camera className="w-4 h-4" />}
+        fullWidth
       >
-        <Camera className="w-4 h-4" />
-        Add from Photo
-      </button>
+        📸 Foto
+      </Button>
     )
   }
 
@@ -499,19 +505,24 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
           {/* Action buttons */}
           <div className="sticky bottom-0 bg-background border-t border-overlay0 p-4 -mx-4 mt-6">
             <div className="flex gap-3">
-              <button 
+              <Button 
                 onClick={handleCancel}
-                className="btn btn-secondary flex-1 h-12 text-base"
+                variant="secondary"
+                size="lg"
+                className="flex-1"
               >
                 Cancelar
-              </button>
-              <button 
+              </Button>
+              <Button 
                 onClick={handleSave}
-                className="btn btn-primary flex-1 h-12 text-base flex items-center justify-center gap-2 font-medium"
+                variant="primary"
+                size="lg"
+                icon={<Check className="w-5 h-5" />}
+                className="flex-1"
+                loading={isSaving}
               >
-                <Check className="w-5 h-5" />
                 Guardar Café
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -549,12 +560,14 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
           <X className="w-12 h-12 mx-auto mb-4 text-red" />
           <h3 className="text-lg font-semibold mb-2">Error</h3>
           <p className="text-subtext1 mb-4">{error}</p>
-          <button 
+          <Button 
             onClick={handleCancel}
-            className="btn btn-secondary w-full"
+            variant="secondary"
+            size="lg"
+            fullWidth
           >
-            Try Again
-          </button>
+            Intentar de Nuevo
+          </Button>
         </div>
       </div>
     )

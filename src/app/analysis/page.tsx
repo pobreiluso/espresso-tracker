@@ -236,18 +236,106 @@ export default function AnalysisPage() {
                       )}
                     </div>
 
-                    {/* Recommendations */}
-                    {analysis && analysis.quality_assessment.recommendations.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-surface0">
-                        <h5 className="text-sm font-medium text-text mb-2">Recomendaciones:</h5>
-                        <ul className="space-y-1">
-                          {analysis.quality_assessment.recommendations.slice(0, 2).map((rec, index) => (
-                            <li key={index} className="text-xs text-subtext1 flex items-start gap-2">
-                              <span className="text-peach">•</span>
-                              {rec}
-                            </li>
-                          ))}
-                        </ul>
+                    {/* Enhanced Professional Analysis */}
+                    {analysis && (
+                      <div className="mt-6 space-y-4">
+                        {/* Scientific Analysis Section */}
+                        {analysis.extraction_analysis.scientific_reasoning && (
+                          <div className="bg-surface1 rounded-lg p-4">
+                            <h5 className="text-sm font-semibold text-blue mb-2 flex items-center gap-2">
+                              <TrendingUp className="h-4 w-4" />
+                              Análisis Científico
+                            </h5>
+                            <p className="text-sm text-subtext1 leading-relaxed">
+                              {analysis.extraction_analysis.scientific_reasoning}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Professional Insights */}
+                        {analysis.professional_insights && (
+                          <div className="grid md:grid-cols-2 gap-4">
+                            {analysis.professional_insights.extraction_science_explanation && (
+                              <div className="bg-surface0 rounded-lg p-4">
+                                <h6 className="text-sm font-medium text-text mb-2">Explicación Técnica</h6>
+                                <p className="text-xs text-subtext1 leading-relaxed">
+                                  {analysis.professional_insights.extraction_science_explanation}
+                                </p>
+                              </div>
+                            )}
+                            {analysis.professional_insights.flavor_prediction && (
+                              <div className="bg-surface0 rounded-lg p-4">
+                                <h6 className="text-sm font-medium text-text mb-2">Predicción de Sabor</h6>
+                                <p className="text-xs text-subtext1 leading-relaxed">
+                                  {analysis.professional_insights.flavor_prediction}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        )}
+
+                        {/* Enhanced Recommendations */}
+                        {analysis.quality_assessment.detailed_recommendations && analysis.quality_assessment.detailed_recommendations.length > 0 ? (
+                          <div className="border-t border-surface0 pt-4">
+                            <h5 className="text-sm font-semibold text-peach mb-3">Recomendaciones Profesionales:</h5>
+                            <div className="space-y-3">
+                              {analysis.quality_assessment.detailed_recommendations.map((rec, index) => (
+                                <div key={index} className="bg-gradient-to-r from-surface0 to-surface1 rounded-lg p-4">
+                                  <div className="flex items-start gap-3">
+                                    <div className={`w-3 h-3 rounded-full mt-1 flex-shrink-0 ${
+                                      rec.priority === 'high' ? 'bg-red' : 
+                                      rec.priority === 'medium' ? 'bg-yellow' : 'bg-green'
+                                    }`} />
+                                    <div className="flex-1">
+                                      <div className="font-medium text-text text-sm mb-1">{rec.recommendation}</div>
+                                      <div className="text-xs text-subtext1 mb-2 leading-relaxed">
+                                        <strong>Por qué:</strong> {rec.scientific_reasoning}
+                                      </div>
+                                      <div className="text-xs text-peach">
+                                        <strong>Impacto esperado:</strong> {rec.expected_flavor_impact}
+                                      </div>
+                                    </div>
+                                    <div className={`text-xs px-2 py-1 rounded-full ${
+                                      rec.priority === 'high' ? 'bg-red/20 text-red' : 
+                                      rec.priority === 'medium' ? 'bg-yellow/20 text-yellow' : 'bg-green/20 text-green'
+                                    }`}>
+                                      {rec.priority === 'high' ? 'Alta' : rec.priority === 'medium' ? 'Media' : 'Baja'}
+                                    </div>
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ) : analysis.quality_assessment.recommendations && analysis.quality_assessment.recommendations.length > 0 && (
+                          <div className="border-t border-surface0 pt-4">
+                            <h5 className="text-sm font-medium text-text mb-2">Recomendaciones:</h5>
+                            <ul className="space-y-1">
+                              {analysis.quality_assessment.recommendations.slice(0, 2).map((rec, index) => (
+                                <li key={index} className="text-xs text-subtext1 flex items-start gap-2">
+                                  <span className="text-peach">•</span>
+                                  {rec}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+
+                        {/* Professional Notes & Tips */}
+                        {(analysis.quality_assessment.professional_notes || analysis.professional_insights?.brewing_mastery_tips) && (
+                          <div className="bg-peach/10 border border-peach/20 rounded-lg p-4">
+                            <h6 className="text-sm font-semibold text-peach mb-2">Notas del Especialista</h6>
+                            {analysis.quality_assessment.professional_notes && (
+                              <p className="text-xs text-subtext1 mb-2">
+                                {analysis.quality_assessment.professional_notes}
+                              </p>
+                            )}
+                            {analysis.professional_insights?.brewing_mastery_tips && (
+                              <p className="text-xs text-subtext1">
+                                <strong>Consejo de Maestría:</strong> {analysis.professional_insights.brewing_mastery_tips}
+                              </p>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

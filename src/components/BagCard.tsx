@@ -3,6 +3,7 @@
 import { formatDistanceToNow, parseISO } from 'date-fns'
 import { Calendar, MapPin, DollarSign, Coffee, Trash2, Plus, Eye } from 'lucide-react'
 import { Button } from './ui/Button'
+import { Tooltip } from './ui/Tooltip'
 import { useState } from 'react'
 
 interface BagCardProps {
@@ -45,15 +46,22 @@ export default function BagCard({ bag, onFinish, onDelete, onNewBrew }: BagCardP
   }
 
   return (
-    <div className={`card p-4 transition-all hover:shadow-md active:scale-[0.98] ${
-      isOpen ? 'border-primary/20' : 'border-overlay0 opacity-75'
-    }`}>
+    <div className={`
+      group relative card p-4 overflow-hidden
+      transition-all duration-300 ease-out
+      hover:shadow-xl hover:shadow-surface2/50 hover:-translate-y-1 hover:scale-[1.01]
+      active:scale-[0.98] active:translate-y-0
+      cursor-pointer
+      before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-300
+      hover:before:opacity-5 before:bg-gradient-to-br before:from-peach before:to-transparent
+      ${isOpen ? 'border-peach/30 hover:border-peach/60' : 'border-overlay0 opacity-75 hover:opacity-90'}
+    `}>
       <div className="flex items-start justify-between mb-3">
         <div className="flex-1">
-          <h3 className="font-semibold text-lg">{bag.coffee.name}</h3>
-          <p className="text-subtext1 font-medium">{bag.coffee.roaster.name}</p>
+          <h3 className="font-semibold text-lg group-hover:text-peach transition-colors duration-200">{bag.coffee.name}</h3>
+          <p className="text-subtext1 font-medium group-hover:text-text transition-colors duration-200">{bag.coffee.roaster.name}</p>
           {bag.coffee.origin_country && (
-            <p className="text-sm text-subtext0">
+            <p className="text-sm text-subtext0 group-hover:text-subtext1 transition-colors duration-200">
               {bag.coffee.origin_country}
               {bag.coffee.region && ` • ${bag.coffee.region}`}
             </p>
@@ -61,38 +69,46 @@ export default function BagCard({ bag, onFinish, onDelete, onNewBrew }: BagCardP
         </div>
         <div className="flex items-center gap-2">
           {isOpen && (
-            <div className="px-2 py-1 bg-green/20 text-green text-xs rounded-full">
-              Open
-            </div>
+            <Tooltip content="Este café está disponible para extracciones. Haz click en 'Marcar Terminado' cuando se acabe.">
+              <div className="px-2 py-1 bg-green/20 text-green text-xs rounded-full 
+                            transform group-hover:scale-105 transition-all duration-200
+                            shadow-sm group-hover:shadow-md group-hover:bg-green/30 cursor-help">
+                Abierto ☕
+              </div>
+            </Tooltip>
           )}
           {!isOpen && (
-            <div className="px-2 py-1 bg-overlay2 text-subtext1 text-xs rounded-full">
-              Finished
-            </div>
+            <Tooltip content="Esta bolsa de café se ha marcado como terminada y ya no está disponible para extracciones.">
+              <div className="px-2 py-1 bg-overlay2 text-subtext1 text-xs rounded-full
+                            transform group-hover:scale-105 transition-all duration-200
+                            shadow-sm group-hover:shadow-md cursor-help">
+                Terminado ✓
+              </div>
+            </Tooltip>
           )}
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-4">
-        <div className="flex items-center gap-2 text-sm text-subtext1">
-          <Coffee className="w-4 h-4" />
+        <div className="flex items-center gap-2 text-sm text-subtext1 group-hover:text-text transition-colors duration-200">
+          <Coffee className="w-4 h-4 group-hover:text-peach group-hover:scale-110 transition-all duration-200" />
           <span>{bag.size_g}g</span>
         </div>
         {bag.price && (
-          <div className="flex items-center gap-2 text-sm text-subtext1">
-            <DollarSign className="w-4 h-4" />
-            <span>${bag.price}</span>
+          <div className="flex items-center gap-2 text-sm text-subtext1 group-hover:text-text transition-colors duration-200">
+            <DollarSign className="w-4 h-4 group-hover:text-green group-hover:scale-110 transition-all duration-200" />
+            <span>€{bag.price}</span>
           </div>
         )}
         {roastDate && (
-          <div className="flex items-center gap-2 text-sm text-subtext1">
-            <Calendar className="w-4 h-4" />
-            <span>Roasted {daysSinceRoast} ago</span>
+          <div className="flex items-center gap-2 text-sm text-subtext1 group-hover:text-text transition-colors duration-200">
+            <Calendar className="w-4 h-4 group-hover:text-yellow group-hover:scale-110 transition-all duration-200" />
+            <span>Tostado hace {daysSinceRoast}</span>
           </div>
         )}
         {bag.purchase_location && (
-          <div className="flex items-center gap-2 text-sm text-subtext1">
-            <MapPin className="w-4 h-4" />
+          <div className="flex items-center gap-2 text-sm text-subtext1 group-hover:text-text transition-colors duration-200">
+            <MapPin className="w-4 h-4 group-hover:text-blue group-hover:scale-110 transition-all duration-200" />
             <span className="truncate">{bag.purchase_location}</span>
           </div>
         )}

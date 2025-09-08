@@ -1,5 +1,6 @@
 import { supabase } from './supabase'
 import { getCurrentUserId } from './auth-utils'
+import { findOrCreateRoaster, findOrCreateCoffee, createBagFromExtractedInfo } from './bags'
 
 export async function getBags() {
   const userId = await getCurrentUserId()
@@ -340,4 +341,94 @@ export async function getBrewById(brewId: string) {
 
   if (error) throw error
   return data
+}
+
+export interface CreateBagData {
+  roaster_name: string
+  coffee_name: string
+  origin?: string | null
+  process?: string | null
+  tasting_notes?: string | null
+  roast_date?: Date | null
+  size_g?: number | null
+  price?: number | null
+}
+
+export async function createBag(data: CreateBagData) {
+  try {
+    // Create roaster data structure
+    const roasterData = {
+      name: data.roaster_name
+    }
+
+    // Create coffee data structure
+    const coffeeData = {
+      name: data.coffee_name,
+      origin_country: data.origin || undefined,
+      process: data.process || undefined,
+      tasting_notes: data.tasting_notes || undefined
+    }
+
+    // Create bag data structure
+    const bagData = {
+      size_g: data.size_g || 250,
+      roast_date: data.roast_date ? data.roast_date.toISOString().split('T')[0] : undefined,
+      price: data.price || undefined
+    }
+
+    // Use the existing functions to create the entities
+    const roaster = await findOrCreateRoaster(roasterData)
+    const coffee = await findOrCreateCoffee(coffeeData, roaster.id)
+    const bag = await createBagFromExtractedInfo(bagData, coffee.id)
+
+    return bag
+  } catch (error) {
+    console.error('Error creating bag:', error)
+    throw error
+  }
+}
+
+export interface UpdateBrewData {
+  rating?: number
+  notes?: string
+  tasting_notes?: string
+  flavor_notes?: string
+}
+
+export async function updateBrew(brewId: string, data: UpdateBrewData) {
+  const userId = await getCurrentUserId()
+  if (!userId) {
+    throw new Error('User not authenticated')
+  }
+
+  try {
+    const { data: brew, error } = await supabase
+      .from('brews')
+      .update({
+        rating: data.rating,
+        notes: data.notes,
+        tasting_notes: data.tasting_notes,
+        flavor_notes: data.flavor_notes,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', brewId)
+      .eq('user_id', userId)
+      .select(`
+        *,
+        bag:bags (
+          *,
+          coffee:coffees (
+            *,
+            roaster:roasters (*)
+          )
+        )
+      `)
+      .single()
+
+    if (error) throw error
+    return brew
+  } catch (error) {
+    console.error('Error updating brew:', error)
+    throw error
+  }
 }

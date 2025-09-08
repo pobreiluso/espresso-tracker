@@ -9,6 +9,7 @@ import { useAuth } from '@/lib/auth-context'
 import { BagWithCoffeeAndRoaster, BrewWithBagAndCoffee } from '@/types'
 import { Coffee, Calendar, Star } from 'lucide-react'
 import { CoffeeLoader } from '@/components/ui/CoffeeLoader'
+import { DashboardSkeleton } from '@/components/ui/Skeleton'
 
 interface DashboardStats {
   openBags: number
@@ -78,9 +79,7 @@ export default function HomePage() {
   if (loading) {
     return (
       <Layout>
-        <div className="flex items-center justify-center min-h-[400px]">
-          <CoffeeLoader message="Preparando tu cafetería..." size="lg" />
-        </div>
+        <DashboardSkeleton />
       </Layout>
     )
   }
@@ -95,44 +94,44 @@ export default function HomePage() {
 
         {/* Coffee Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="card p-4 hover:shadow-lg transition-all duration-200">
+          <div className="group card p-4 hover:shadow-xl hover:shadow-peach/20 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] cursor-pointer overflow-hidden relative before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-5 before:bg-gradient-to-br before:from-peach before:to-transparent">
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl">📦</span>
-              <div className="text-2xl font-bold text-peach">{stats.openBags}</div>
+              <span className="text-2xl group-hover:scale-110 transition-transform duration-200">📦</span>
+              <div className="text-2xl font-bold text-peach group-hover:text-peach/90 transition-colors duration-200">{stats.openBags}</div>
             </div>
-            <div className="text-sm text-subtext1">Cafés Abiertos</div>
+            <div className="text-sm text-subtext1 group-hover:text-text transition-colors duration-200">Cafés Abiertos</div>
           </div>
-          <div className="card p-4 hover:shadow-lg transition-all duration-200">
+          <div className="group card p-4 hover:shadow-xl hover:shadow-green/20 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] cursor-pointer overflow-hidden relative before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-5 before:bg-gradient-to-br before:from-green before:to-transparent">
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl">☕</span>
-              <div className="text-2xl font-bold text-green">{stats.totalBrews}</div>
+              <span className="text-2xl group-hover:scale-110 transition-transform duration-200">☕</span>
+              <div className="text-2xl font-bold text-green group-hover:text-green/90 transition-colors duration-200">{stats.totalBrews}</div>
             </div>
-            <div className="text-sm text-subtext1">Extracciones</div>
+            <div className="text-sm text-subtext1 group-hover:text-text transition-colors duration-200">Extracciones</div>
           </div>
-          <div className="card p-4 hover:shadow-lg transition-all duration-200">
+          <div className="group card p-4 hover:shadow-xl hover:shadow-yellow/20 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] cursor-pointer overflow-hidden relative before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-5 before:bg-gradient-to-br before:from-yellow before:to-transparent">
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl">⭐</span>
-              <div className="text-2xl font-bold text-yellow">
+              <span className="text-2xl group-hover:scale-110 transition-transform duration-200">⭐</span>
+              <div className="text-2xl font-bold text-yellow group-hover:text-yellow/90 transition-colors duration-200">
                 {stats.avgRating ? stats.avgRating.toFixed(1) : '-'}
               </div>
             </div>
-            <div className="text-sm text-subtext1">Calidad Media</div>
+            <div className="text-sm text-subtext1 group-hover:text-text transition-colors duration-200">Calidad Media</div>
           </div>
-          <div className="card p-4 hover:shadow-lg transition-all duration-200">
+          <div className="group card p-4 hover:shadow-xl hover:shadow-mauve/20 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] cursor-pointer overflow-hidden relative before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-5 before:bg-gradient-to-br before:from-mauve before:to-transparent">
             <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl">📈</span>
-              <div className="text-2xl font-bold text-mauve">{stats.weeklyBrews}</div>
+              <span className="text-2xl group-hover:scale-110 transition-transform duration-200">📈</span>
+              <div className="text-2xl font-bold text-mauve group-hover:text-mauve/90 transition-colors duration-200">{stats.weeklyBrews}</div>
             </div>
-            <div className="text-sm text-subtext1">Esta Semana</div>
+            <div className="text-sm text-subtext1 group-hover:text-text transition-colors duration-200">Esta Semana</div>
           </div>
         </div>
 
         {/* Coffee Actions */}
         <div className="grid md:grid-cols-2 gap-6">
-          <div className="card p-6 border-l-4 border-l-peach">
+          <div className="group card p-6 border-l-4 border-l-peach hover:border-l-peach/80 transition-all duration-300 hover:shadow-xl hover:shadow-peach/10 hover:-translate-y-1 overflow-hidden relative before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-5 before:bg-gradient-to-r before:from-peach before:to-transparent">
             <div className="flex items-center gap-3 mb-4">
-              <span className="text-2xl">🚀</span>
-              <h2 className="text-xl font-semibold">Acciones Rápidas</h2>
+              <span className="text-2xl group-hover:scale-110 transition-transform duration-200">🚀</span>
+              <h2 className="text-xl font-semibold group-hover:text-peach transition-colors duration-200">Acciones Rápidas</h2>
             </div>
             <div className="space-y-3">
               <AddBagFromPhoto />
@@ -145,10 +144,10 @@ export default function HomePage() {
             </div>
           </div>
 
-          <div className="card p-6 border-l-4 border-l-green">
+          <div className="group card p-6 border-l-4 border-l-green hover:border-l-green/80 transition-all duration-300 hover:shadow-xl hover:shadow-green/10 hover:-translate-y-1 overflow-hidden relative before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-5 before:bg-gradient-to-r before:from-green before:to-transparent">
             <div className="flex items-center gap-3 mb-4">
-              <span className="text-2xl">🫘</span>
-              <h2 className="text-xl font-semibold">Cafés Abiertos</h2>
+              <span className="text-2xl group-hover:scale-110 transition-transform duration-200">🫘</span>
+              <h2 className="text-xl font-semibold group-hover:text-green transition-colors duration-200">Cafés Abiertos</h2>
             </div>
             {openBags.length === 0 ? (
               <div className="text-center py-8">
@@ -186,13 +185,13 @@ export default function HomePage() {
         </div>
 
         {/* Recent Brews */}
-        <div className="card p-6 border-l-4 border-l-yellow">
+        <div className="group card p-6 border-l-4 border-l-yellow hover:border-l-yellow/80 transition-all duration-300 hover:shadow-xl hover:shadow-yellow/10 hover:-translate-y-1 overflow-hidden relative before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-5 before:bg-gradient-to-r before:from-yellow before:to-transparent">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <span className="text-2xl">🍃</span>
-              <h2 className="text-xl font-semibold">Últimas Extracciones</h2>
+              <span className="text-2xl group-hover:scale-110 transition-transform duration-200">🍃</span>
+              <h2 className="text-xl font-semibold group-hover:text-yellow transition-colors duration-200">Últimas Extracciones</h2>
             </div>
-            <Link href="/brews" className="text-sm text-peach hover:text-rosewater transition-colors font-medium">
+            <Link href="/brews" className="text-sm text-peach hover:text-rosewater transition-all duration-200 font-medium hover:scale-105 hover:-translate-y-0.5">
               Ver historial →
             </Link>
           </div>
