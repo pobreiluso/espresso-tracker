@@ -5,8 +5,10 @@ import { useRouter } from 'next/navigation'
 import Layout from '@/components/Layout'
 import { getAllBrews } from '@/lib/queries'
 import { useAuth } from '@/lib/auth-context'
-import { BrewWithBagAndCoffee } from '@/types'
-import { Star, Coffee, Clock, Thermometer, Scale, Zap, Calendar, Eye } from 'lucide-react'
+import { BrewWithBagAndCoffee, DetailedRecommendation } from '@/types'
+import { Star, Coffee, Clock, Thermometer, Scale, Zap, Calendar, Eye, Edit3 } from 'lucide-react'
+import EditBrewModal from '@/components/EditBrewModal'
+import { Button } from '@/components/ui/Button'
 
 export default function BrewsPage() {
   const { user, loading: authLoading } = useAuth()
@@ -17,6 +19,7 @@ export default function BrewsPage() {
     rating: 0,
     search: ''
   })
+  const [editingBrew, setEditingBrew] = useState<BrewWithBagAndCoffee | null>(null)
   const router = useRouter()
 
   useEffect(() => {
@@ -49,6 +52,21 @@ export default function BrewsPage() {
 
   const handleFilterChange = (key: string, value: any) => {
     setFilters(prev => ({ ...prev, [key]: value }))
+  }
+
+  const handleBrewUpdated = (updatedBrew: BrewWithBagAndCoffee) => {
+    // Optimistic UI: Update the brew in the list immediately
+    setBrews(prevBrews => 
+      prevBrews.map(brew => 
+        brew.id === updatedBrew.id ? updatedBrew : brew
+      )
+    )
+    setEditingBrew(null)
+  }
+
+  const handleEditClick = (e: React.MouseEvent, brew: BrewWithBagAndCoffee) => {
+    e.stopPropagation() // Prevent navigation to brew detail
+    setEditingBrew(brew)
   }
 
   const formatDate = (dateString: string | null) => {
@@ -183,7 +201,7 @@ export default function BrewsPage() {
             {brews.map((brew) => (
               <div 
                 key={brew.id} 
-                className="card p-6 cursor-pointer hover:bg-surface0 transition-colors"
+                className="group card p-6 cursor-pointer hover:bg-surface0 transition-colors"
                 onClick={() => router.push(`/brews/${brew.id}`)}
               >
                 <div className="flex items-start justify-between mb-4">
@@ -205,9 +223,19 @@ export default function BrewsPage() {
                       {formatDate(brew.brew_date)} • {brew.bag.coffee.origin_country}
                     </p>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Star className="h-4 w-4 text-yellow fill-current" />
-                    <span className="text-sm font-medium">{brew.rating}</span>
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1">
+                      <Star className="h-4 w-4 text-yellow fill-current" />
+                      <span className="text-sm font-medium">{brew.rating}</span>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={(e) => handleEditClick(e, brew)}
+                      icon={<Edit3 className="w-4 h-4" />}
+                      className="opacity-0 group-hover:opacity-100 transition-opacity duration-200"
+                      title="Editar brew"
+                    />
                   </div>
                 </div>
 
@@ -243,7 +271,32 @@ export default function BrewsPage() {
                         </span>
                       )}
                     </div>
-                    {brew.ai_analysis?.quality_assessment?.recommendations && (
+                    {/* Enhanced Recommendations Display */}
+                    {brew.ai_analysis?.quality_assessment?.detailed_recommendations && brew.ai_analysis.quality_assessment.detailed_recommendations.length > 0 ? (
+                      <div className="space-y-2">
+                        <div className="text-sm font-medium text-blue">Análisis Profesional:</div>
+                        {brew.ai_analysis.quality_assessment.detailed_recommendations.slice(0, 1).map((rec: DetailedRecommendation, index: number) => (
+                          <div key={index} className="bg-surface1 rounded-lg p-3">
+                            <div className="flex items-start gap-2 mb-1">
+                              <div className={`w-2 h-2 rounded-full mt-1.5 ${
+                                rec.priority === 'high' ? 'bg-red' : 
+                                rec.priority === 'medium' ? 'bg-yellow' : 'bg-green'
+                              }`} />
+                              <div className="flex-1">
+                                <div className="text-sm font-medium text-text">{rec.recommendation}</div>
+                                <div className="text-xs text-subtext1 mt-1">{rec.scientific_reasoning}</div>
+                                <div className="text-xs text-peach mt-1">→ {rec.expected_flavor_impact}</div>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        {brew.ai_analysis.quality_assessment.detailed_recommendations.length > 1 && (
+                          <div className="text-xs text-subtext1">
+                            +{brew.ai_analysis.quality_assessment.detailed_recommendations.length - 1} recomendación(es) más
+                          </div>
+                        )}
+                      </div>
+                    ) : brew.ai_analysis?.quality_assessment?.recommendations && (
                       <div className="text-sm text-subtext1">
                         <strong>Recomendaciones:</strong> {Array.isArray(brew.ai_analysis.quality_assessment.recommendations) 
                           ? brew.ai_analysis.quality_assessment.recommendations.join('. ')
@@ -265,6 +318,15 @@ export default function BrewsPage() {
           </div>
         )}
       </div>
+
+      {/* Edit Brew Modal */}
+      {editingBrew && (
+        <EditBrewModal
+          brew={editingBrew}
+          onClose={() => setEditingBrew(null)}
+          onSuccess={handleBrewUpdated}
+        />
+      )}
     </Layout>
   )
 }

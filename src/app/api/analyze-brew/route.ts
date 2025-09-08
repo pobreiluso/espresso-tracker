@@ -35,13 +35,26 @@ export async function POST(request: NextRequest) {
       model: "gpt-4o",
       messages: [
         {
+          role: "system",
+          content: `You are an expert coffee consultant with 15+ years of experience in specialty coffee, extraction science, and professional barista training. You have deep knowledge of:
+
+• Coffee chemistry and extraction theory (TDS, extraction yield, Maillard reactions)
+• Professional brewing methods and equipment calibration
+• Sensory analysis and cupping standards (SCA protocols)
+• Troubleshooting extraction problems through visual and taste analysis
+• Regional coffee characteristics and processing methods
+• Professional coffee shop operations and quality control
+
+Your role is to analyze coffee photos with the precision and insight of a master barista, providing actionable, specific recommendations backed by coffee science principles. Always explain the "why" behind your recommendations using extraction theory and coffee chemistry.`
+        },
+        {
           role: "user",
           content: [
             {
               type: "text",
-              text: `Analyze this photo of brewed coffee and provide detailed extraction analysis.${brewData ? `
+              text: `Analyze this brewed coffee photo with professional precision. Provide detailed extraction analysis with specific, actionable recommendations backed by coffee science.
 
-**BREW PARAMETERS PROVIDED:**
+${brewData ? `**BREWING CONTEXT:**
 ${brewData.grind_setting ? `• Grind Setting: ${brewData.grind_setting}` : ''}
 ${brewData.extraction_time ? `• Extraction Time: ${brewData.extraction_time} seconds` : ''}
 ${brewData.dose_grams ? `• Coffee Dose: ${brewData.dose_grams}g` : ''}
@@ -49,24 +62,46 @@ ${brewData.yield_grams ? `• Yield: ${brewData.yield_grams}g` : ''}
 ${brewData.water_temp ? `• Water Temperature: ${brewData.water_temp}°C` : ''}
 ${brewData.ratio ? `• Brew Ratio: 1:${brewData.ratio.toFixed(1)}` : ''}
 
-Use these parameters to provide more accurate and contextual analysis. Consider how the visual characteristics align with these brewing parameters and provide specific recommendations based on this data.` : ''}
+CRITICAL: Use these parameters to provide context-specific analysis. Connect visual characteristics to brewing parameters and explain cause-effect relationships.
 
-Look at:
+**COHERENCE CHECK:** Before making any recommendation, verify it makes sense with the current parameters:
+- If current time is 30s, don't recommend "extend to 28-30s" - that makes no sense
+- If current grind is 6, specify the exact new setting (e.g. "change to 4" for finer)
+- Reference the ACTUAL current values in your reasoning` : ''}
 
-1. **Extraction Quality**: Analyze the color, clarity, and visual characteristics to determine if the coffee appears under-extracted, over-extracted, or properly extracted${brewData ? '. Consider the provided extraction time and grind setting in your assessment.' : ''}
-2. **Brewing Method**: Identify the brewing method based on the cup, crema, clarity, and overall appearance
-3. **Volume Estimation**: Estimate the volume of coffee in ml based on cup size and liquid level${brewData?.yield_grams ? ` (provided yield: ${brewData.yield_grams}g)` : ''}
-4. **Crema Analysis** (for espresso): Analyze crema color, thickness, texture, and coverage
-5. **Visual Defects**: Identify any visual issues like channeling, uneven extraction, or other problems
-6. **Coffee Strength**: Estimate strength based on opacity and color${brewData?.ratio ? ` (brew ratio: 1:${brewData.ratio.toFixed(1)})` : ''}
-7. **Overall Quality**: Rate the visual quality and provide specific recommendations${brewData ? ' that consider the provided brewing parameters' : ''}
+**ANALYSIS REQUIREMENTS:**
 
-${brewData ? `
-**IMPORTANT**: In your recommendations, provide specific adjustments based on the current parameters:
-- If extraction time was ${brewData.extraction_time ? `${brewData.extraction_time}s` : 'not provided'}, suggest specific time adjustments
-- If grind setting was ${brewData.grind_setting ? `${brewData.grind_setting}` : 'not provided'}, suggest specific grind adjustments (e.g., "try setting 13 instead of ${brewData.grind_setting}")
-- If ratio was ${brewData.ratio ? `1:${brewData.ratio.toFixed(1)}` : 'not provided'}, suggest specific dose/yield changes
-- If water temp was ${brewData.water_temp ? `${brewData.water_temp}°C` : 'not provided'}, suggest temperature adjustments` : ''}
+1. **Professional Visual Assessment**
+   - Analyze color saturation, clarity, surface tension, particle distribution
+   - Identify brewing method from visual cues (cup type, crema, clarity, body)
+   - Estimate extraction level using visual indicators (color depth, clarity, surface oil)
+   
+2. **Extraction Science Analysis**
+   - Apply extraction theory to visual characteristics
+   - Identify signs of under/over/proper extraction using color science
+   - Analyze particle size distribution effects from visual clarity
+   
+3. **Method-Specific Evaluation**
+   - For espresso: crema analysis (formation, color evolution, persistence, tiger striping)
+   - For pour-over: clarity, brightness, particle visibility, brew bed analysis
+   - For immersion: body, opacity, sediment, extraction evenness
+   
+4. **Professional Troubleshooting**
+   - Identify specific extraction problems (channeling, uneven saturation, grind issues)
+   - Connect visual defects to brewing parameter adjustments
+   - Provide equipment-specific recommendations
+
+**RECOMMENDATIONS MUST INCLUDE:**
+- Specific parameter changes with scientific reasoning based on PROVIDED CURRENT VALUES
+- Expected flavor impact of adjustments
+- Progressive improvement steps (immediate vs. long-term changes)
+- Equipment calibration suggestions when relevant
+
+${brewData ? `**CRITICAL - CURRENT PARAMETER CONTEXT:**
+Current extraction time: ${brewData.extraction_time}s - Only recommend time changes if visual analysis suggests this specific time is problematic
+Current grind setting: ${brewData.grind_setting} - Recommend specific new setting numbers (e.g. "Change from ${brewData.grind_setting} to ${brewData.grind_setting && !isNaN(Number(brewData.grind_setting)) ? Number(brewData.grind_setting) + 2 : 'a finer setting'}")
+Current ratio: ${brewData.ratio ? `1:${brewData.ratio.toFixed(1)}` : 'not provided'} - Only suggest changes if this specific ratio is causing extraction issues
+DO NOT recommend maintaining current parameters if they are already at the suggested values.` : ''}
 
 Return ONLY a valid JSON object with this exact structure:
 {
@@ -74,12 +109,14 @@ Return ONLY a valid JSON object with this exact structure:
     "quality": "under-extracted|properly-extracted|over-extracted",
     "confidence": 0.85,
     "strength": "light|medium|strong",
-    "defects": ["channeling", "uneven extraction"] // array of issues found
+    "defects": ["channeling", "uneven extraction"],
+    "scientific_reasoning": "The coffee's amber-golden color indicates proper extraction around 20-22% yield. Surface clarity suggests even particle distribution without significant channeling. Color saturation aligns with optimal extraction window for medium roast profiles."
   },
   "brewing_method": {
     "detected_method": "espresso|pour-over|french-press|aeropress|drip|other",
     "confidence": 0.9,
-    "indicators": ["crema present", "small cup", "thick body"] // visual cues used
+    "indicators": ["crema present", "small cup", "thick body"],
+    "method_specific_notes": "Crema formation and retention indicates proper espresso extraction with good CO2 release from freshly roasted beans."
   },
   "volume_estimation": {
     "estimated_ml": 30,
@@ -91,35 +128,57 @@ Return ONLY a valid JSON object with this exact structure:
     "color": "golden|dark|light|absent",
     "thickness": "thin|medium|thick",
     "coverage": "full|partial|patchy|none",
-    "quality_score": 8.5
+    "quality_score": 8.5,
+    "crema_science_notes": "Golden-brown crema indicates proper extraction temperature and fresh beans. Thickness suggests optimal grind size and tamping pressure."
   },
   "visual_characteristics": {
     "color": "#8B4513",
     "opacity": "transparent|translucent|opaque",
     "clarity": "clear|slightly cloudy|cloudy|muddy",
-    "surface_appearance": "smooth|foamy|bubbly|oily"
+    "surface_appearance": "smooth|foamy|bubbly|oily",
+    "particle_analysis": "Minimal visible particles indicate proper filtration and grind size distribution."
   },
   "quality_assessment": {
     "overall_score": 7.8,
-    "positive_aspects": ["good crema", "even color", "proper extraction"],
-    "areas_for_improvement": ["could be slightly stronger", "grind finer"],
-    "recommendations": [
-      "Try grinding 1-2 clicks finer",
-      "Aim for 25-30 second extraction time", 
-      "Check water temperature (should be 93-96°C)"
-    ]
+    "positive_aspects": ["good crema formation", "even color distribution", "proper extraction clarity"],
+    "areas_for_improvement": ["could optimize grind consistency", "consider temperature profiling"],
+    "detailed_recommendations": [
+      {
+        "recommendation": "Increase grind fineness by 2 clicks",
+        "scientific_reasoning": "Current particle size appears slightly too coarse based on flow rate and color saturation. Finer grind will increase surface area and extraction yield.",
+        "expected_flavor_impact": "Will reduce sourness and increase body and sweetness",
+        "priority": "high"
+      },
+      {
+        "recommendation": "Extend extraction time to 28-30 seconds",
+        "scientific_reasoning": "Current extraction appears rushed. Longer contact time will improve soluble extraction and balance.",
+        "expected_flavor_impact": "Better balance, reduced acidity, more developed flavor notes",
+        "priority": "medium"
+      }
+    ],
+    "professional_notes": "This extraction shows good fundamentals but has room for optimization in particle distribution and contact time."
   },
   "technical_analysis": {
     "extraction_indicators": {
-      "sourness_risk": "low|medium|high",
-      "bitterness_risk": "low|medium|high",
-      "balance_assessment": "under|balanced|over"
+      "sourness_risk": "medium",
+      "bitterness_risk": "low",
+      "balance_assessment": "slightly under",
+      "tds_estimation": "1.2-1.4%",
+      "extraction_yield_estimate": "19-21%"
     },
     "suggested_adjustments": {
-      "grind_size": "finer|current|coarser",
-      "dose_adjustment": "increase|maintain|decrease",
-      "time_adjustment": "shorter|current|longer"
-    }
+      "grind_size": "finer",
+      "dose_adjustment": "maintain",
+      "time_adjustment": "longer",
+      "temperature_adjustment": "maintain|increase|decrease",
+      "technique_notes": "Focus on even tamping and consistent water distribution to improve extraction uniformity."
+    },
+    "equipment_specific_advice": "Consider burr grinder calibration for more consistent particle distribution. Check group head temperature stability."
+  },
+  "professional_insights": {
+    "extraction_science_explanation": "Based on visual analysis, this coffee exhibits characteristics of partial under-extraction with good potential. The color depth and surface characteristics suggest 19-21% extraction yield, which is below the optimal 20-22% range for most coffees.",
+    "flavor_prediction": "Likely tasting notes: bright acidity, moderate body, some fruit notes but may lack sweetness and complexity due to under-extraction.",
+    "brewing_mastery_tips": "Focus on grind consistency and distribution. Consider WDT (Weiss Distribution Technique) for more even extraction. This coffee has good potential with minor adjustments."
   },
   "confidence_overall": 0.82
 }`
@@ -172,12 +231,14 @@ Return ONLY a valid JSON object with this exact structure:
         quality: "properly-extracted",
         confidence: 0.75,
         strength: "medium",
-        defects: []
+        defects: [],
+        scientific_reasoning: "Mock analysis: Color and clarity suggest balanced extraction around 20-22% yield. Visual characteristics indicate proper grind size and technique."
       },
       brewing_method: {
         detected_method: "espresso",
         confidence: 0.8,
-        indicators: ["small cup", "crema present", "thick body"]
+        indicators: ["small cup", "crema present", "thick body"],
+        method_specific_notes: "Mock analysis: Good espresso characteristics with proper crema formation indicating fresh beans and correct extraction parameters."
       },
       volume_estimation: {
         estimated_ml: 30,
@@ -189,35 +250,51 @@ Return ONLY a valid JSON object with this exact structure:
         color: "golden",
         thickness: "medium",
         coverage: "full",
-        quality_score: 8.0
+        quality_score: 8.0,
+        crema_science_notes: "Mock analysis: Good crema formation indicates proper extraction temperature and bean freshness."
       },
       visual_characteristics: {
         color: "#8B4513",
         opacity: "opaque",
         clarity: "clear",
-        surface_appearance: "smooth"
+        surface_appearance: "smooth",
+        particle_analysis: "Mock analysis: Clean appearance with minimal visible particles indicating proper filtration."
       },
       quality_assessment: {
         overall_score: 7.5,
-        positive_aspects: ["good crema", "even color", "proper extraction"],
-        areas_for_improvement: ["could experiment with grind size"],
-        recommendations: [
-          "Current extraction looks good",
-          "Try adjusting grind size for different flavor profiles",
-          "Maintain current technique"
-        ]
+        positive_aspects: ["good crema formation", "even extraction", "proper color"],
+        areas_for_improvement: ["could fine-tune grind consistency"],
+        detailed_recommendations: [
+          {
+            recommendation: "Maintain current technique",
+            scientific_reasoning: "Mock analysis: Current parameters show good extraction fundamentals",
+            expected_flavor_impact: "Should maintain balanced flavor profile",
+            priority: "low"
+          }
+        ],
+        professional_notes: "Mock analysis: Solid extraction showing good barista fundamentals. Minor optimizations could enhance complexity."
       },
       technical_analysis: {
         extraction_indicators: {
           sourness_risk: "low",
           bitterness_risk: "low",
-          balance_assessment: "balanced"
+          balance_assessment: "balanced",
+          tds_estimation: "1.3-1.5%",
+          extraction_yield_estimate: "20-22%"
         },
         suggested_adjustments: {
           grind_size: "current",
           dose_adjustment: "maintain",
-          time_adjustment: "current"
-        }
+          time_adjustment: "current",
+          temperature_adjustment: "maintain",
+          technique_notes: "Mock analysis: Continue with current technique, focusing on consistency."
+        },
+        equipment_specific_advice: "Mock analysis: Equipment appears to be performing well. Regular calibration recommended."
+      },
+      professional_insights: {
+        extraction_science_explanation: "Mock analysis: Visual characteristics suggest optimal extraction yield in the 20-22% range with good balance of acids, sugars, and aromatics.",
+        flavor_prediction: "Expected profile: balanced acidity, medium body, sweet finish with developed flavor complexity.",
+        brewing_mastery_tips: "Mock analysis: Focus on consistency and continue developing palate for subtle adjustments."
       },
       confidence_overall: 0.75,
       _mock: true,

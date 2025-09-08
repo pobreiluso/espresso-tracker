@@ -97,18 +97,27 @@ export interface CreateBrewForm {
   brew_date?: string
 }
 
-// AI Brew Analysis Types
+// Enhanced AI Brew Analysis Types
+export interface DetailedRecommendation {
+  recommendation: string
+  scientific_reasoning: string
+  expected_flavor_impact: string
+  priority: 'low' | 'medium' | 'high'
+}
+
 export interface BrewAnalysis {
   extraction_analysis: {
     quality: 'under-extracted' | 'properly-extracted' | 'over-extracted'
     confidence: number
     strength: 'light' | 'medium' | 'strong'
     defects: string[]
+    scientific_reasoning: string
   }
   brewing_method: {
     detected_method: 'espresso' | 'pour-over' | 'french-press' | 'aeropress' | 'drip' | 'other'
     confidence: number
     indicators: string[]
+    method_specific_notes: string
   }
   volume_estimation: {
     estimated_ml: number
@@ -121,30 +130,45 @@ export interface BrewAnalysis {
     thickness: 'thin' | 'medium' | 'thick'
     coverage: 'full' | 'partial' | 'patchy' | 'none'
     quality_score: number
+    crema_science_notes: string
   }
   visual_characteristics: {
     color: string
     opacity: 'transparent' | 'translucent' | 'opaque'
     clarity: 'clear' | 'slightly cloudy' | 'cloudy' | 'muddy'
     surface_appearance: 'smooth' | 'foamy' | 'bubbly' | 'oily'
+    particle_analysis: string
   }
   quality_assessment: {
     overall_score: number
     positive_aspects: string[]
     areas_for_improvement: string[]
-    recommendations: string[]
+    detailed_recommendations: DetailedRecommendation[]
+    professional_notes: string
+    // Keep old recommendations for backward compatibility
+    recommendations?: string[]
   }
   technical_analysis: {
     extraction_indicators: {
       sourness_risk: 'low' | 'medium' | 'high'
       bitterness_risk: 'low' | 'medium' | 'high'
       balance_assessment: 'under' | 'balanced' | 'over'
+      tds_estimation: string
+      extraction_yield_estimate: string
     }
     suggested_adjustments: {
       grind_size: 'finer' | 'current' | 'coarser'
       dose_adjustment: 'increase' | 'maintain' | 'decrease'
       time_adjustment: 'shorter' | 'current' | 'longer'
+      temperature_adjustment: 'maintain' | 'increase' | 'decrease'
+      technique_notes: string
     }
+    equipment_specific_advice: string
+  }
+  professional_insights: {
+    extraction_science_explanation: string
+    flavor_prediction: string
+    brewing_mastery_tips: string
   }
   confidence_overall: number
   _mock?: boolean

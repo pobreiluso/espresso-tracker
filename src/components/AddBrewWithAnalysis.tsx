@@ -157,7 +157,7 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
         grind_setting: grindSetting ? String(grindSetting) : 'medium',
         water_temp_c: Math.max(80, Math.min(100, waterTemp || 93)), // Ensure within 80-100 range
         rating: Math.max(1, Math.min(10, rating)), // Ensure within 1-10 range
-        notes: notes || (analysis ? analysis.quality_assessment.recommendations.join('. ') : ''),
+        notes: notes || (analysis?.quality_assessment?.recommendations ? analysis.quality_assessment.recommendations.join('. ') : ''),
         brew_date: new Date().toISOString(), // Full timestamp
         
         // Analysis fields (null if no analysis)
@@ -503,7 +503,7 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
                 </div>
               )}
 
-              {analysis.quality_assessment.recommendations.length > 0 && (
+              {analysis.quality_assessment.recommendations && analysis.quality_assessment.recommendations.length > 0 && (
                 <div className="bg-surface0 rounded-xl p-4">
                   <h4 className="text-text font-medium mb-3">Recomendaciones</h4>
                   <ul className="space-y-2">

@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Loader2 } from 'lucide-react'
 
@@ -22,46 +22,57 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     iconPosition = 'left',
     children,
     disabled,
+    onClick,
     ...props
   }, ref) => {
+    const [isClicked, setIsClicked] = useState(false)
     const baseClasses = [
       // Base styling
-      'inline-flex items-center justify-center gap-2',
-      'font-medium rounded-lg transition-all duration-200',
+      'inline-flex items-center justify-center gap-2 relative overflow-hidden',
+      'font-medium rounded-lg transition-all duration-200 ease-out',
       'focus:outline-none focus:ring-2 focus:ring-offset-2',
-      'active:scale-95 transform',
-      'disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100',
+      'active:scale-95 transform hover:scale-[1.02]',
+      'disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 disabled:hover:scale-100',
       // Ensure minimum touch target (44px)
-      'min-h-[44px] touch-manipulation'
+      'min-h-[44px] touch-manipulation',
+      // Add subtle gradient overlay for depth
+      'before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-200',
+      'hover:before:opacity-10 before:bg-gradient-to-r before:from-white before:to-transparent'
     ]
 
     const variants = {
       primary: [
         'bg-peach text-base',
-        'hover:bg-peach/90 active:bg-peach/95',
-        'shadow-sm hover:shadow-md',
-        'focus:ring-peach focus:ring-offset-surface0',
-        'border border-transparent'
+        'hover:bg-peach/90 active:bg-peach/95 hover:shadow-lg hover:shadow-peach/25',
+        'shadow-md hover:shadow-xl transition-shadow duration-300',
+        'focus:ring-peach focus:ring-offset-surface0 focus:shadow-lg',
+        'border border-transparent',
+        'hover:-translate-y-0.5 active:translate-y-0'
       ],
       secondary: [
         'bg-surface1 text-text border border-surface2',
-        'hover:bg-surface2 hover:border-surface3',
-        'shadow-sm hover:shadow-md',
-        'focus:ring-text focus:ring-offset-surface0'
+        'hover:bg-surface2 hover:border-surface3 hover:shadow-lg hover:shadow-surface2/50',
+        'shadow-md hover:shadow-xl transition-shadow duration-300',
+        'focus:ring-text focus:ring-offset-surface0',
+        'hover:-translate-y-0.5 active:translate-y-0'
       ],
       destructive: [
         'bg-red text-base border border-transparent',
-        'hover:bg-red/90 shadow-md hover:shadow-lg',
-        'focus:ring-red focus:ring-offset-surface0'
+        'hover:bg-red/90 shadow-lg hover:shadow-xl hover:shadow-red/25',
+        'transition-shadow duration-300',
+        'focus:ring-red focus:ring-offset-surface0',
+        'hover:-translate-y-0.5 active:translate-y-0'
       ],
       ghost: [
-        'text-text hover:bg-surface1',
-        'focus:ring-text focus:ring-offset-surface0'
+        'text-text hover:bg-surface1 hover:shadow-md',
+        'focus:ring-text focus:ring-offset-surface0',
+        'hover:-translate-y-0.5 active:translate-y-0 transition-transform'
       ],
       outline: [
         'border border-overlay0 text-text',
-        'hover:bg-surface0 hover:border-overlay1',
-        'focus:ring-text focus:ring-offset-surface0'
+        'hover:bg-surface0 hover:border-overlay1 hover:shadow-md',
+        'focus:ring-text focus:ring-offset-surface0',
+        'hover:-translate-y-0.5 active:translate-y-0 transition-transform'
       ]
     }
 
@@ -76,6 +87,15 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
 
     const isDisabled = disabled || loading
 
+    const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      if (isDisabled) return
+      
+      setIsClicked(true)
+      setTimeout(() => setIsClicked(false), 200)
+      
+      onClick?.(e)
+    }
+
     return (
       <button
         ref={ref}
@@ -87,8 +107,14 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
           className
         )}
         disabled={isDisabled}
+        onClick={handleClick}
         {...props}
       >
+        {/* Ripple effect */}
+        {isClicked && (
+          <span className="absolute inset-0 animate-ping rounded-lg bg-white opacity-20" />
+        )}
+        
         {loading && (
           <Loader2 className="w-4 h-4 animate-spin" />
         )}

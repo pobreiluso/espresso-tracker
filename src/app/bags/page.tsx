@@ -6,10 +6,12 @@ import AddBagFromPhoto from '@/components/AddBagFromPhoto'
 import BagCard from '@/components/BagCard'
 import PullToRefresh from '@/components/PullToRefresh'
 import { AddBrewWithAnalysis } from '@/components/AddBrewWithAnalysis'
+import ManualBagEntry from '@/components/ManualBagEntry'
 import { getBags, getOpenBags, getFinishedBags, markBagAsFinished, deleteBag } from '@/lib/queries'
 import { useAuth } from '@/lib/auth-context'
-import { Loader2 } from 'lucide-react'
+import { Loader2, Plus, PenTool } from 'lucide-react'
 import { LoadingBags } from '@/components/ui/CoffeeLoader'
+import { Button } from '@/components/ui/Button'
 
 type FilterType = 'all' | 'open' | 'finished'
 
@@ -22,6 +24,7 @@ export default function BagsPage() {
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [showAddBrew, setShowAddBrew] = useState(false)
   const [selectedBagId, setSelectedBagId] = useState<string | null>(null)
+  const [showManualEntry, setShowManualEntry] = useState(false)
 
   const fetchBags = async (isRefresh = false) => {
     // Don't fetch if user is not authenticated
@@ -111,6 +114,11 @@ export default function BagsPage() {
     setRefreshKey(prev => prev + 1) // Refresh the bags list
   }
 
+  const handleManualBagAdded = () => {
+    setShowManualEntry(false)
+    setRefreshKey(prev => prev + 1) // Refresh the bags list
+  }
+
   return (
     <Layout>
       <PullToRefresh onRefresh={handleRefresh} isRefreshing={isRefreshing}>
@@ -122,9 +130,14 @@ export default function BagsPage() {
             </div>
             <div className="hidden md:flex gap-2">
               <AddBagFromPhoto onSuccess={handleBagAdded} />
-              <button className="btn btn-secondary">
-                + Entrada Manual
-              </button>
+              <Button
+                variant="secondary"
+                size="md"
+                icon={<Plus className="w-4 h-4" />}
+                onClick={() => setShowManualEntry(true)}
+              >
+                ✍️ Manual
+              </Button>
             </div>
           </div>
 
@@ -197,9 +210,13 @@ export default function BagsPage() {
                   <div className="md:hidden">
                     <AddBagFromPhoto onSuccess={handleBagAdded} />
                   </div>
-                  <button className="btn btn-secondary">
-                    + Entrada Manual
-                  </button>
+                  <Button
+                    variant="secondary"
+                    onClick={() => setShowManualEntry(true)}
+                    icon={<Plus className="w-4 h-4" />}
+                  >
+                    ✍️ Añadir Bolsa Manual
+                  </Button>
                 </div>
               )}
             </div>
@@ -214,6 +231,14 @@ export default function BagsPage() {
           onClose={() => setShowAddBrew(false)}
           onSuccess={handleBrewAdded}
           initialBagId={selectedBagId}
+        />
+      )}
+
+      {/* Manual Bag Entry Modal */}
+      {showManualEntry && (
+        <ManualBagEntry
+          onClose={() => setShowManualEntry(false)}
+          onSuccess={handleManualBagAdded}
         />
       )}
     </Layout>
