@@ -10,6 +10,7 @@ import { BagWithCoffeeAndRoaster, BrewWithBagAndCoffee } from '@/types'
 import { Coffee, Calendar, Star } from 'lucide-react'
 import { CoffeeLoader } from '@/components/ui/CoffeeLoader'
 import { DashboardSkeleton } from '@/components/ui/Skeleton'
+import { StatCard } from '@/components/ui/StatCard'
 
 interface DashboardStats {
   openBags: number
@@ -94,36 +95,30 @@ export default function HomePage() {
 
         {/* Coffee Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="group card p-4 hover:shadow-xl hover:shadow-peach/20 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] cursor-pointer overflow-hidden relative before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-5 before:bg-gradient-to-br before:from-peach before:to-transparent">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl group-hover:scale-110 transition-transform duration-200">📦</span>
-              <div className="text-2xl font-bold text-peach group-hover:text-peach/90 transition-colors duration-200">{stats.openBags}</div>
-            </div>
-            <div className="text-sm text-subtext1 group-hover:text-text transition-colors duration-200">Cafés Abiertos</div>
-          </div>
-          <div className="group card p-4 hover:shadow-xl hover:shadow-green/20 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] cursor-pointer overflow-hidden relative before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-5 before:bg-gradient-to-br before:from-green before:to-transparent">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl group-hover:scale-110 transition-transform duration-200">☕</span>
-              <div className="text-2xl font-bold text-green group-hover:text-green/90 transition-colors duration-200">{stats.totalBrews}</div>
-            </div>
-            <div className="text-sm text-subtext1 group-hover:text-text transition-colors duration-200">Extracciones</div>
-          </div>
-          <div className="group card p-4 hover:shadow-xl hover:shadow-yellow/20 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] cursor-pointer overflow-hidden relative before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-5 before:bg-gradient-to-br before:from-yellow before:to-transparent">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl group-hover:scale-110 transition-transform duration-200">⭐</span>
-              <div className="text-2xl font-bold text-yellow group-hover:text-yellow/90 transition-colors duration-200">
-                {stats.avgRating ? stats.avgRating.toFixed(1) : '-'}
-              </div>
-            </div>
-            <div className="text-sm text-subtext1 group-hover:text-text transition-colors duration-200">Calidad Media</div>
-          </div>
-          <div className="group card p-4 hover:shadow-xl hover:shadow-mauve/20 transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] cursor-pointer overflow-hidden relative before:absolute before:inset-0 before:opacity-0 before:transition-opacity before:duration-300 hover:before:opacity-5 before:bg-gradient-to-br before:from-mauve before:to-transparent">
-            <div className="flex items-center gap-3 mb-2">
-              <span className="text-2xl group-hover:scale-110 transition-transform duration-200">📈</span>
-              <div className="text-2xl font-bold text-mauve group-hover:text-mauve/90 transition-colors duration-200">{stats.weeklyBrews}</div>
-            </div>
-            <div className="text-sm text-subtext1 group-hover:text-text transition-colors duration-200">Esta Semana</div>
-          </div>
+          <StatCard
+            icon="📦"
+            value={stats.openBags}
+            label="Cafés Abiertos"
+            color="peach"
+          />
+          <StatCard
+            icon="☕"
+            value={stats.totalBrews}
+            label="Extracciones"
+            color="green"
+          />
+          <StatCard
+            icon="⭐"
+            value={stats.avgRating ? stats.avgRating.toFixed(1) : '-'}
+            label="Calidad Media"
+            color="yellow"
+          />
+          <StatCard
+            icon="📈"
+            value={stats.weeklyBrews}
+            label="Esta Semana"
+            color="mauve"
+          />
         </div>
 
         {/* Coffee Actions */}

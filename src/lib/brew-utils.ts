@@ -1,5 +1,6 @@
 import { BREWING_METHODS, type BrewMethodKey, type BrewMethodValue } from './constants'
 import { BrewMethod } from '@/types'
+import { validateParameter } from './validation'
 
 /**
  * Maps detected brewing method from AI analysis to valid BrewMethod enum
@@ -57,32 +58,18 @@ export function createBrewData(params: {
     photoUrl
   } = params
 
-  // Import validation function inline to avoid circular imports
-  const validateBrewParameter = (value: any, type: 'DOSE_G' | 'YIELD_G' | 'TIME_S' | 'WATER_TEMP_C' | 'RATING') => {
-    const configs = {
-      DOSE_G: { min: 5, max: 30, default: 18 },
-      YIELD_G: { min: 10, max: 100, default: 30 },
-      TIME_S: { min: 5, max: 90, default: 25 },
-      WATER_TEMP_C: { min: 80, max: 100, default: 93 },
-      RATING: { min: 1, max: 10, default: 5 }
-    }
-    const config = configs[type]
-    const numValue = typeof value === 'number' ? value : (value ? Number(value) : null)
-    if (!numValue || isNaN(numValue)) return config.default
-    return Math.max(config.min, Math.min(config.max, numValue))
-  }
 
   const mappedMethod = mapBrewingMethod(detectedMethod)
   
   return {
     bag_id: bagId,
     method: mappedMethod,
-    dose_g: validateBrewParameter(doseGrams, 'DOSE_G'),
-    yield_g: yieldGrams || analysis?.volume_estimation?.estimated_ml || validateBrewParameter(yieldGrams, 'YIELD_G'),
-    time_s: validateBrewParameter(extractionTime, 'TIME_S'),
+    dose_g: validateParameter(doseGrams, 'DOSE_G'),
+    yield_g: yieldGrams || analysis?.volume_estimation?.estimated_ml || validateParameter(yieldGrams, 'YIELD_G'),
+    time_s: validateParameter(extractionTime, 'TIME_S'),
     grind_setting: grindSetting ? String(grindSetting) : 'medium',
-    water_temp_c: validateBrewParameter(waterTemp, 'WATER_TEMP_C'),
-    rating: validateBrewParameter(rating, 'RATING'),
+    water_temp_c: validateParameter(waterTemp, 'WATER_TEMP_C'),
+    rating: validateParameter(rating, 'RATING'),
     notes: notes || (analysis?.quality_assessment?.recommendations?.join('. ') || ''),
     brew_date: new Date().toISOString(),
     

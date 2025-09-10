@@ -6,6 +6,9 @@ import { Camera, Loader2, Check, X, Edit, ChevronDown, ChevronUp } from 'lucide-
 import { Button } from './ui/Button'
 import { extractBagInfoFromImage, processBagFromPhoto, ExtractedBagInfo } from '@/lib/bags'
 import { uploadPhoto, compressImage, generatePhotoFilename } from '@/lib/storage'
+import { BagBasicFields } from './bag-form/BagBasicFields'
+import { ConfidenceIndicator } from './bag-form/ConfidenceIndicator'
+import { FullPageLoading } from './ui/LoadingState'
 
 interface AddBagFromPhotoProps {
   onSuccess?: () => void
@@ -127,13 +130,10 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
 
   if (step === 'processing') {
     return (
-      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-        <div className="bg-background rounded-lg p-8 text-center max-w-sm w-full">
-          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
-          <h3 className="text-lg font-semibold mb-2">Processing image...</h3>
-          <p className="text-subtext1">Our AI is extracting coffee bag information</p>
-        </div>
-      </div>
+      <FullPageLoading 
+        title="Procesando imagen..."
+        subtitle="Nuestra IA está extrayendo información de la bolsa de café"
+      />
     )
   }
 
@@ -148,93 +148,8 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
         </div>
 
         <div className="p-4 space-y-4">
-          {/* Confidence indicator */}
-          <div className="card p-3">
-            <div className="flex items-center justify-between">
-              <span className="text-sm font-medium">Detection Confidence</span>
-              <span className={`px-2 py-1 rounded text-xs ${
-                editedInfo.confidence > 0.8 ? 'bg-green/20 text-green' :
-                editedInfo.confidence > 0.6 ? 'bg-yellow/20 text-yellow' :
-                'bg-red/20 text-red'
-              }`}>
-                {Math.round(editedInfo.confidence * 100)}%
-              </span>
-            </div>
-          </div>
-
-          {/* Quick Essential Fields */}
-          <div className="card p-4">
-            <h3 className="text-sm font-semibold text-subtext0 uppercase tracking-wide mb-4">Información Básica</h3>
-            <div className="space-y-4">
-              {/* Full width inputs for better mobile experience */}
-              <div>
-                <label className="block text-sm font-medium mb-2">Tostador</label>
-                <input 
-                  value={editedInfo.roaster.name}
-                  onChange={(e) => updateField('roaster', 'name', e.target.value)}
-                  className="input w-full h-12 text-base"
-                  placeholder="Nombre del tostador"
-                />
-              </div>
-              
-              <div>
-                <label className="block text-sm font-medium mb-2">Nombre del Café</label>
-                <input 
-                  value={editedInfo.coffee.name}
-                  onChange={(e) => updateField('coffee', 'name', e.target.value)}
-                  className="input w-full h-12 text-base"
-                  placeholder="Nombre del café"
-                />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Origen</label>
-                  <input 
-                    value={editedInfo.coffee.origin_country || ''}
-                    onChange={(e) => updateField('coffee', 'origin_country', e.target.value)}
-                    className="input w-full h-12 text-base"
-                    placeholder="ej. Etiopía"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Tamaño (g)</label>
-                  <input 
-                    type="number"
-                    inputMode="numeric"
-                    value={editedInfo.bag.size_g}
-                    onChange={(e) => updateField('bag', 'size_g', parseInt(e.target.value) || 0)}
-                    className="input w-full h-12 text-base"
-                    placeholder="250"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-sm font-medium mb-2">Precio (€)</label>
-                  <input 
-                    type="number"
-                    inputMode="decimal"
-                    step="0.01"
-                    value={editedInfo.bag.price || ''}
-                    onChange={(e) => updateField('bag', 'price', e.target.value ? parseFloat(e.target.value) : null)}
-                    className="input w-full h-12 text-base"
-                    placeholder="15.00"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-2">Fecha de Tueste</label>
-                  <input 
-                    type="date"
-                    value={editedInfo.bag.roast_date || ''}
-                    onChange={(e) => updateField('bag', 'roast_date', e.target.value)}
-                    className="input w-full h-12 text-base"
-                  />
-                </div>
-              </div>
-            </div>
-          </div>
+          <ConfidenceIndicator confidence={editedInfo.confidence} />
+          <BagBasicFields bagInfo={editedInfo} onUpdate={updateField} />
 
           {/* More Details Collapsible Section */}
           <div className="card">
@@ -532,12 +447,7 @@ export default function AddBagFromPhoto({ onSuccess }: AddBagFromPhotoProps) {
 
   if (step === 'saving') {
     return (
-      <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
-        <div className="bg-background rounded-lg p-8 text-center max-w-sm w-full">
-          <Loader2 className="w-12 h-12 animate-spin mx-auto mb-4 text-primary" />
-          <h3 className="text-lg font-semibold mb-2">Saving bag...</h3>
-        </div>
-      </div>
+      <FullPageLoading title="Guardando café..." />
     )
   }
 

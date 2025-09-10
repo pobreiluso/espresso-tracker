@@ -233,47 +233,35 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">
-                    Dosis (g)
-                  </label>
-                  <input
+                <FormField label="Dosis (g)">
+                  <FormInput
                     type="number"
                     step="0.1"
                     value={doseGrams}
-                    onChange={(e) => setDoseGrams(e.target.value ? Number(e.target.value) : '')}
+                    onChange={(value) => setDoseGrams(value ? Number(value) : '')}
                     placeholder="ej. 18.5"
-                    className="w-full px-4 py-3 bg-surface0 border border-surface1 rounded-xl text-text focus:outline-none focus:ring-2 focus:ring-peach focus:border-transparent"
                   />
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">
-                    Rendimiento (g)
-                  </label>
-                  <input
+                <FormField label="Rendimiento (g)">
+                  <FormInput
                     type="number"
                     step="0.1"
                     value={yieldGrams}
-                    onChange={(e) => setYieldGrams(e.target.value ? Number(e.target.value) : '')}
+                    onChange={(value) => setYieldGrams(value ? Number(value) : '')}
                     placeholder="ej. 37.0"
-                    className="w-full px-4 py-3 bg-surface0 border border-surface1 rounded-xl text-text focus:outline-none focus:ring-2 focus:ring-peach focus:border-transparent"
                   />
-                </div>
+                </FormField>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-text mb-2">
-                  Temperatura Agua (°C)
-                </label>
-                <input
+              <FormField label="Temperatura Agua (°C)">
+                <FormInput
                   type="number"
                   value={waterTemp}
-                  onChange={(e) => setWaterTemp(e.target.value ? Number(e.target.value) : '')}
+                  onChange={(value) => setWaterTemp(value ? Number(value) : '')}
                   placeholder="ej. 93"
-                  className="w-full px-4 py-3 bg-surface0 border border-surface1 rounded-xl text-text focus:outline-none focus:ring-2 focus:ring-peach focus:border-transparent"
                 />
-              </div>
+              </FormField>
 
               <div>
                 <label className="block text-sm font-medium text-text mb-2">
@@ -290,18 +278,14 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
                 <div className="text-center text-peach font-medium">{rating}</div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-text mb-2">
-                  Notas
-                </label>
-                <textarea
+              <FormField label="Notas">
+                <FormTextarea
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={setNotes}
                   placeholder="Sabores, aromas, observaciones..."
-                  className="w-full px-4 py-3 bg-surface0 border border-surface1 rounded-xl text-text focus:outline-none focus:ring-2 focus:ring-peach focus:border-transparent resize-none"
                   rows={3}
                 />
-              </div>
+              </FormField>
 
               <div className="space-y-3">
                 <p className="text-sm font-medium text-text">Foto del Café Extraído (Opcional)</p>
