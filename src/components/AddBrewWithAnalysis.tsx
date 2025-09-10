@@ -8,6 +8,8 @@ import { supabase } from '@/lib/supabase'
 import { uploadPhoto, generatePhotoFilename, compressImage } from '@/lib/storage'
 import { useSettings } from '@/lib/useSettings'
 import { getCurrentUserId } from '@/lib/auth-utils'
+import { createBrewData } from '@/lib/brew-utils'
+import { FormField, FormInput, FormTextarea, FormSelect } from '@/components/ui/FormField'
 
 interface AddBrewWithAnalysisProps {
   onClose: () => void
@@ -110,72 +112,26 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
     setError(null)
 
     try {
-      // Get the current authenticated user ID
       const userId = await getCurrentUserId()
       if (!userId) {
         throw new Error('User not authenticated')
       }
 
-      // Upload photo first
-      let photoUrl: string | null = null
-      if (photo) {
-        const filename = generatePhotoFilename('brew', 'jpg')
-        const path = `brews/${filename}`
-        
-        // Compress the image before upload
-        const compressedFile = await compressImage(photo)
-        const uploadResult = await uploadPhoto(compressedFile, 'brew-photos', path)
-        
-        if (uploadResult.error) {
-          setError(`Error uploading photo: ${uploadResult.error}`)
-          return
-        }
-        
-        photoUrl = uploadResult.url
-      }
-
-      // Create brew record with or without analysis data
-      let mappedMethod = 'v60' // default method
-      
-      if (analysis) {
-        // Map detected method to valid values when analysis is available
-        const detectedMethod = analysis.brewing_method.detected_method?.toLowerCase()
-        if (detectedMethod?.includes('pour') || detectedMethod?.includes('v60')) mappedMethod = 'v60'
-        else if (detectedMethod?.includes('espresso')) mappedMethod = 'espresso'
-        else if (detectedMethod?.includes('aeropress')) mappedMethod = 'aeropress'
-        else if (detectedMethod?.includes('chemex')) mappedMethod = 'chemex'
-        else if (detectedMethod?.includes('kalita')) mappedMethod = 'kalita'
-        else if (detectedMethod?.includes('french') || detectedMethod?.includes('press')) mappedMethod = 'frenchpress'
-      }
-
-      const brewData = {
-        bag_id: selectedBagId,
-        method: mappedMethod,
-        dose_g: Math.max(5, Math.min(30, doseGrams || 18)), // Ensure within 5-30 range
-        yield_g: yieldGrams || (analysis?.volume_estimation.estimated_ml) || 30,
-        time_s: Math.max(5, Math.min(90, extractionTime || 25)), // Ensure within 5-90 range
-        grind_setting: grindSetting ? String(grindSetting) : 'medium',
-        water_temp_c: Math.max(80, Math.min(100, waterTemp || 93)), // Ensure within 80-100 range
-        rating: Math.max(1, Math.min(10, rating)), // Ensure within 1-10 range
-        notes: notes || (analysis?.quality_assessment?.recommendations ? analysis.quality_assessment.recommendations.join('. ') : ''),
-        brew_date: new Date().toISOString(), // Full timestamp
-        
-        // Analysis fields (null if no analysis)
-        extraction_time_seconds: extractionTime || null,
-        dose_grams: doseGrams || null,
-        yield_grams: yieldGrams || null,
-        water_temp_celsius: waterTemp || null,
-        ai_analysis: analysis as any || null,
-        extraction_quality: analysis?.extraction_analysis.quality || null,
-        brewing_method_detected: analysis?.brewing_method.detected_method || null,
-        estimated_volume_ml: analysis?.volume_estimation.estimated_ml || null,
-        visual_score: analysis?.quality_assessment.overall_score || null,
-        confidence_score: analysis?.confidence_overall || null,
-        photo_url: photoUrl,
-        has_photo: !!photoUrl,
-        has_ai_analysis: !!analysis,
-        user_id: userId // Use real authenticated user ID
-      }
+      const photoUrl = await uploadBrewPhoto()
+      const brewData = createBrewData({
+        bagId: selectedBagId,
+        userId,
+        grindSetting,
+        extractionTime,
+        doseGrams,
+        yieldGrams,
+        waterTemp,
+        rating,
+        notes,
+        detectedMethod: analysis?.brewing_method.detected_method,
+        analysis,
+        photoUrl
+      })
 
       console.log('Inserting brew data:', brewData)
       
@@ -195,6 +151,22 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
     } finally {
       setIsSubmitting(false)
     }
+  }
+
+  const uploadBrewPhoto = async (): Promise<string | null> => {
+    if (!photo) return null
+
+    const filename = generatePhotoFilename('brew', 'jpg')
+    const path = `brews/${filename}`
+    
+    const compressedFile = await compressImage(photo)
+    const uploadResult = await uploadPhoto(compressedFile, 'brew-photos', path)
+    
+    if (uploadResult.error) {
+      throw new Error(`Error uploading photo: ${uploadResult.error}`)
+    }
+    
+    return uploadResult.url
   }
 
   const selectedBag = openBags.find(bag => bag.id === selectedBagId)
@@ -226,15 +198,10 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
 
           {step === 'form' && (
             <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-text mb-2">
-                  Bolsa de Café *
-                </label>
-                <select
+              <FormField label="Bolsa de Café" required>
+                <FormSelect
                   value={selectedBagId}
-                  onChange={(e) => setSelectedBagId(e.target.value)}
-                  className="w-full px-4 py-3 bg-surface0 border border-surface1 rounded-xl text-text focus:outline-none focus:ring-2 focus:ring-peach focus:border-transparent"
-                  required
+                  onChange={setSelectedBagId}
                 >
                   <option value="">Seleccionar bolsa...</option>
                   {openBags.map((bag) => (
@@ -242,81 +209,59 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
                       {bag.coffee.roaster.name} - {bag.coffee.name}
                     </option>
                   ))}
-                </select>
-              </div>
+                </FormSelect>
+              </FormField>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">
-                    <Settings className="inline h-4 w-4 mr-1" />
-                    Ajuste Molino
-                  </label>
-                  <input
+                <FormField label={<><Settings className="inline h-4 w-4 mr-1" />Ajuste Molino</>}>
+                  <FormInput
                     type="number"
                     value={grindSetting}
-                    onChange={(e) => setGrindSetting(e.target.value ? Number(e.target.value) : '')}
+                    onChange={(value) => setGrindSetting(value ? Number(value) : '')}
                     placeholder="ej. 15"
-                    className="w-full px-4 py-3 bg-surface0 border border-surface1 rounded-xl text-text focus:outline-none focus:ring-2 focus:ring-peach focus:border-transparent"
                   />
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">
-                    <Clock className="inline h-4 w-4 mr-1" />
-                    Tiempo (seg)
-                  </label>
-                  <input
+                <FormField label={<><Clock className="inline h-4 w-4 mr-1" />Tiempo (seg)</>}>
+                  <FormInput
                     type="number"
                     value={extractionTime}
-                    onChange={(e) => setExtractionTime(e.target.value ? Number(e.target.value) : '')}
+                    onChange={(value) => setExtractionTime(value ? Number(value) : '')}
                     placeholder="ej. 25"
-                    className="w-full px-4 py-3 bg-surface0 border border-surface1 rounded-xl text-text focus:outline-none focus:ring-2 focus:ring-peach focus:border-transparent"
                   />
-                </div>
+                </FormField>
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">
-                    Dosis (g)
-                  </label>
-                  <input
+                <FormField label="Dosis (g)">
+                  <FormInput
                     type="number"
                     step="0.1"
                     value={doseGrams}
-                    onChange={(e) => setDoseGrams(e.target.value ? Number(e.target.value) : '')}
+                    onChange={(value) => setDoseGrams(value ? Number(value) : '')}
                     placeholder="ej. 18.5"
-                    className="w-full px-4 py-3 bg-surface0 border border-surface1 rounded-xl text-text focus:outline-none focus:ring-2 focus:ring-peach focus:border-transparent"
                   />
-                </div>
+                </FormField>
 
-                <div>
-                  <label className="block text-sm font-medium text-text mb-2">
-                    Rendimiento (g)
-                  </label>
-                  <input
+                <FormField label="Rendimiento (g)">
+                  <FormInput
                     type="number"
                     step="0.1"
                     value={yieldGrams}
-                    onChange={(e) => setYieldGrams(e.target.value ? Number(e.target.value) : '')}
+                    onChange={(value) => setYieldGrams(value ? Number(value) : '')}
                     placeholder="ej. 37.0"
-                    className="w-full px-4 py-3 bg-surface0 border border-surface1 rounded-xl text-text focus:outline-none focus:ring-2 focus:ring-peach focus:border-transparent"
                   />
-                </div>
+                </FormField>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-text mb-2">
-                  Temperatura Agua (°C)
-                </label>
-                <input
+              <FormField label="Temperatura Agua (°C)">
+                <FormInput
                   type="number"
                   value={waterTemp}
-                  onChange={(e) => setWaterTemp(e.target.value ? Number(e.target.value) : '')}
+                  onChange={(value) => setWaterTemp(value ? Number(value) : '')}
                   placeholder="ej. 93"
-                  className="w-full px-4 py-3 bg-surface0 border border-surface1 rounded-xl text-text focus:outline-none focus:ring-2 focus:ring-peach focus:border-transparent"
                 />
-              </div>
+              </FormField>
 
               <div>
                 <label className="block text-sm font-medium text-text mb-2">
@@ -333,18 +278,14 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
                 <div className="text-center text-peach font-medium">{rating}</div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-text mb-2">
-                  Notas
-                </label>
-                <textarea
+              <FormField label="Notas">
+                <FormTextarea
                   value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
+                  onChange={setNotes}
                   placeholder="Sabores, aromas, observaciones..."
-                  className="w-full px-4 py-3 bg-surface0 border border-surface1 rounded-xl text-text focus:outline-none focus:ring-2 focus:ring-peach focus:border-transparent resize-none"
                   rows={3}
                 />
-              </div>
+              </FormField>
 
               <div className="space-y-3">
                 <p className="text-sm font-medium text-text">Foto del Café Extraído (Opcional)</p>

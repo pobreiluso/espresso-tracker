@@ -1,4 +1,17 @@
 // Data validation utilities for extracted bag information
+import { BREW_VALIDATION } from './constants'
+
+// Brew parameter validation utilities
+export function validateBrewParameter(
+  value: number | string | null | undefined,
+  paramType: keyof typeof BREW_VALIDATION
+): number {
+  const config = BREW_VALIDATION[paramType]
+  const numValue = sanitizeNumericValue(value)
+  
+  if (numValue === null) return config.default
+  return Math.max(config.min, Math.min(config.max, numValue))
+}
 
 export function sanitizeNumericValue(value: any): number | null {
   if (value === null || value === undefined || value === '') {
