@@ -6,25 +6,58 @@ import { Button } from './ui/Button'
 import { Tooltip } from './ui/Tooltip'
 import { useState } from 'react'
 
+/**
+ * Props for the BagCard component
+ */
 interface BagCardProps {
+  /** Coffee bag data with populated coffee and roaster relationships */
   bag: any // Will be properly typed when we have the full bag type
+  /** Callback function when user marks bag as finished */
   onFinish?: () => void
+  /** Callback function when user deletes the bag */
   onDelete?: () => void
+  /** Callback function when user wants to create a new brew with this bag */
   onNewBrew?: () => void
 }
 
+/**
+ * BagCard - A interactive card component for displaying coffee bag information
+ * 
+ * Displays detailed information about a coffee bag including roaster, coffee name,
+ * size, price, roast date, and purchase location. Provides interactive controls
+ * for creating new brews, marking bags as finished, and deleting bags.
+ * 
+ * The card has different visual states:
+ * - Open bags: Highlighted with peach border and "Abierto" badge
+ * - Finished bags: Muted appearance with "Terminado" badge and disabled new brew button
+ * 
+ * Features smooth hover animations, loading states for async actions,
+ * and contextual tooltips for better UX.
+ * 
+ * @param props - Component props
+ * @returns JSX element representing the coffee bag card
+ */
 export default function BagCard({ bag, onFinish, onDelete, onNewBrew }: BagCardProps) {
+  // Loading states for async operations to prevent double-clicks
   const [isFinishing, setIsFinishing] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   
+  // Determine if bag is currently open (available for brewing)
   const isOpen = !bag.finish_date
+  
+  // Parse ISO date strings to Date objects for formatting
   const roastDate = bag.roast_date ? parseISO(bag.roast_date) : null
   const openDate = bag.open_date ? parseISO(bag.open_date) : null
   const finishDate = bag.finish_date ? parseISO(bag.finish_date) : null
 
+  // Calculate human-readable time differences for display
   const daysOpen = openDate ? formatDistanceToNow(openDate) : null
   const daysSinceRoast = roastDate ? formatDistanceToNow(roastDate) : null
 
+  /**
+   * Handles marking a bag as finished/consumed
+   * Prevents multiple simultaneous calls and manages loading state
+   */
   const handleFinish = async () => {
     if (!onFinish) return
     setIsFinishing(true)
@@ -35,6 +68,10 @@ export default function BagCard({ bag, onFinish, onDelete, onNewBrew }: BagCardP
     }
   }
 
+  /**
+   * Handles bag deletion with confirmation
+   * Prevents multiple simultaneous calls and manages loading state
+   */
   const handleDelete = async () => {
     if (!onDelete) return
     setIsDeleting(true)

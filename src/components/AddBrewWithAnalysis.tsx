@@ -9,12 +9,33 @@ import { uploadPhoto, generatePhotoFilename, compressImage } from '@/lib/storage
 import { useSettings } from '@/lib/useSettings'
 import { getCurrentUserId } from '@/lib/auth-utils'
 
+/** Props interface for the AddBrewWithAnalysis component */
 interface AddBrewWithAnalysisProps {
+  /** Callback function to close the modal */
   onClose: () => void
+  /** Callback function called when brew is successfully created */
   onSuccess: () => void
-  initialBagId?: string // Optional bag ID to pre-select
+  /** Optional bag ID to pre-select in the form */
+  initialBagId?: string
 }
 
+/**
+ * AddBrewWithAnalysis - Advanced brew creation component with AI-powered photo analysis
+ * 
+ * This component provides a multi-step workflow for creating brew entries with optional
+ * AI analysis of coffee extraction quality. Features include:
+ * 
+ * - Multi-step form (parameters → photo → analysis → results)
+ * - Integration with user settings for default values
+ * - Camera and file upload support for brew photos
+ * - Real-time AI analysis of extraction quality
+ * - Comprehensive brew parameter tracking
+ * - Automatic photo compression and cloud storage
+ * - Fallback support when AI analysis fails
+ * 
+ * @param props - Component props
+ * @returns JSX element for the brew creation modal
+ */
 export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBrewWithAnalysisProps) {
   const { settings } = useSettings()
   const [step, setStep] = useState<'form' | 'photo' | 'analyzing' | 'results'>('form')
@@ -36,24 +57,29 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
   const fileInputRef = useRef<HTMLInputElement>(null)
   const cameraInputRef = useRef<HTMLInputElement>(null)
 
-  // Load open bags on component mount and set initial bag if provided
+  // Load available coffee bags on component mount and handle initial selection
   useEffect(() => {
     getOpenBags().then(bags => {
       setOpenBags(bags)
-      // If initialBagId is provided and exists in the bags, select it
+      // Pre-select bag if initialBagId is provided and valid
       if (initialBagId && bags.some(bag => bag.id === initialBagId)) {
         setSelectedBagId(initialBagId)
       } else if (bags.length === 1) {
-        // Auto-select if only one bag available
+        // Auto-select if only one bag is available
         setSelectedBagId(bags[0].id)
       }
     }).catch(console.error)
   }, [initialBagId])
 
+  /**
+   * Handles photo capture from camera or file input
+   * Creates preview image and advances to photo review step
+   */
   const handlePhotoCapture = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0]
     if (file) {
       setPhoto(file)
+      // Create preview image for user confirmation
       const reader = new FileReader()
       reader.onload = (e) => {
         setPhotoPreview(e.target?.result as string)
@@ -63,6 +89,10 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
     }
   }
 
+  /**
+   * Analyzes the captured photo using AI to assess extraction quality
+   * Sends photo and brewing parameters to the analysis API
+   */
   const analyzePhoto = async () => {
     if (!photo) return
 
@@ -70,10 +100,11 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
     setError(null)
 
     try {
+      // Prepare form data with image and brewing context
       const formData = new FormData()
       formData.append('image', photo)
       
-      // Add brew parameters as context for analysis
+      // Include brewing parameters to provide context for more accurate analysis
       const brewContext = {
         grind_setting: grindSetting,
         extraction_time: extractionTime,
@@ -103,6 +134,10 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
     }
   }
 
+  /**
+   * Submits the brew data to the database with optional AI analysis results
+   * Handles photo upload, data validation, and database insertion
+   */
   const submitBrew = async () => {
     if (!selectedBagId) return
 
@@ -110,19 +145,19 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
     setError(null)
 
     try {
-      // Get the current authenticated user ID
+      // Ensure user is authenticated before proceeding
       const userId = await getCurrentUserId()
       if (!userId) {
         throw new Error('User not authenticated')
       }
 
-      // Upload photo first
+      // Handle photo upload to cloud storage if photo exists
       let photoUrl: string | null = null
       if (photo) {
         const filename = generatePhotoFilename('brew', 'jpg')
         const path = `brews/${filename}`
         
-        // Compress the image before upload
+        // Compress image to optimize storage and loading performance
         const compressedFile = await compressImage(photo)
         const uploadResult = await uploadPhoto(compressedFile, 'brew-photos', path)
         
@@ -134,11 +169,11 @@ export function AddBrewWithAnalysis({ onClose, onSuccess, initialBagId }: AddBre
         photoUrl = uploadResult.url
       }
 
-      // Create brew record with or without analysis data
+      // Determine brewing method from AI analysis or use default
       let mappedMethod = 'v60' // default method
       
       if (analysis) {
-        // Map detected method to valid values when analysis is available
+        // Map AI-detected method to valid database enum values
         const detectedMethod = analysis.brewing_method.detected_method?.toLowerCase()
         if (detectedMethod?.includes('pour') || detectedMethod?.includes('v60')) mappedMethod = 'v60'
         else if (detectedMethod?.includes('espresso')) mappedMethod = 'espresso'

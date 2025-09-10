@@ -1,36 +1,64 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
+// Initialize OpenAI client with API key from environment variables
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 })
 
+/**
+ * POST /api/analyze-brew
+ * 
+ * Analyzes uploaded coffee brew photos using OpenAI's GPT-4 Vision API to provide
+ * comprehensive extraction quality assessment, brewing method detection, and actionable
+ * recommendations for improvement.
+ * 
+ * @param request - NextRequest containing multipart form data with:
+ *   - image: File - The coffee photo to analyze
+ *   - brew_data: string - JSON string with brewing parameters (optional)
+ * 
+ * @returns NextResponse with BrewAnalysis object or error message
+ * 
+ * The API uses expert coffee consultant prompts to analyze:
+ * - Extraction quality (under/proper/over-extracted)
+ * - Brewing method detection
+ * - Volume estimation
+ * - Crema analysis (for espresso)
+ * - Visual characteristics
+ * - Professional recommendations with scientific backing
+ * 
+ * Falls back to mock data when OpenAI API key is not configured.
+ */
 export async function POST(request: NextRequest) {
   try {
+    // Extract form data containing image and optional brewing parameters
     const formData = await request.formData()
     const image = formData.get('image') as File
     const brewDataString = formData.get('brew_data') as string
 
+    // Validate that an image file was provided
     if (!image) {
       return NextResponse.json({ error: 'No image provided' }, { status: 400 })
     }
 
-    // Parse brew data if provided
+    // Parse brewing context data if provided (used for more accurate analysis)
     let brewData = null
     if (brewDataString) {
       try {
         brewData = JSON.parse(brewDataString)
       } catch (e) {
         console.error('Failed to parse brew data:', e)
+        // Continue without brew data rather than failing completely
       }
     }
 
-    // Convert image to base64
+    // Convert image to base64 format required by OpenAI Vision API
     const bytes = await image.arrayBuffer()
     const base64 = Buffer.from(bytes).toString('base64')
     const imageUrl = `data:${image.type};base64,${base64}`
 
-    // Call OpenAI Vision API to analyze the brewed coffee
+    // Call OpenAI Vision API with expert coffee consultant system prompt
+    // for professional-grade analysis
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
       messages: [
@@ -202,10 +230,10 @@ Return ONLY a valid JSON object with this exact structure:
       throw new Error('No response from OpenAI')
     }
 
-    // Parse the JSON response, handling code blocks if present
+    // Parse the JSON response, handling potential markdown code block formatting
     let analysisResult
     try {
-      // Remove markdown code block formatting if present
+      // Clean up response by removing markdown code blocks if present
       let cleanContent = content.trim()
       if (cleanContent.startsWith('```json')) {
         cleanContent = cleanContent.replace(/^```json\s*/, '').replace(/\s*```$/, '')
@@ -225,7 +253,8 @@ Return ONLY a valid JSON object with this exact structure:
   } catch (error) {
     console.error('Error analyzing brew:', error)
     
-    // Return mock data for development/testing
+    // Fallback to mock data for development/testing when API fails
+    // This ensures the application continues to work during development
     const mockAnalysis = {
       extraction_analysis: {
         quality: "properly-extracted",
