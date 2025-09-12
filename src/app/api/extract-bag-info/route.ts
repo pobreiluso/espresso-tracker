@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { rateLimiter, validateFileUpload, getSecureErrorMessage } from '@/lib/security'
 
 // For development without OpenAI API key
 const MOCK_MODE = !process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY === 'your-openai-api-key-here'
@@ -59,11 +60,23 @@ interface ExtractedBagInfo {
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.ip || request.headers.get('x-forwarded-for') || 'anonymous'
+    if (rateLimiter.isRateLimited(`extract-bag-${ip}`, 10, 60000)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
+
     const formData = await request.formData()
     const file = formData.get('image') as File
 
     if (!file) {
       return NextResponse.json({ error: 'No image provided' }, { status: 400 })
+    }
+
+    // Validate file upload
+    const validation = validateFileUpload(file)
+    if (!validation.isValid) {
+      return NextResponse.json({ error: validation.error }, { status: 400 })
     }
 
     if (MOCK_MODE) {
@@ -225,7 +238,7 @@ Use your extensive coffee knowledge to fill in details even if not all info is v
   } catch (error) {
     console.error('Error extracting bag info:', error)
     return NextResponse.json(
-      { error: 'Failed to process image' },
+      { error: getSecureErrorMessage(error) },
       { status: 500 }
     )
   }
