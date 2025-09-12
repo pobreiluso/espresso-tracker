@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import OpenAI from 'openai'
+import { rateLimiter, validateFileUpload, getSecureErrorMessage } from '@/lib/security'
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -7,6 +8,12 @@ const openai = new OpenAI({
 
 export async function POST(request: NextRequest) {
   try {
+    // Rate limiting
+    const ip = request.ip || request.headers.get('x-forwarded-for') || 'anonymous'
+    if (rateLimiter.isRateLimited(`analyze-brew-${ip}`, 20, 60000)) {
+      return NextResponse.json({ error: 'Too many requests' }, { status: 429 })
+    }
+
     const formData = await request.formData()
     const image = formData.get('image') as File
     const brewDataString = formData.get('brew_data') as string
@@ -15,13 +22,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'No image provided' }, { status: 400 })
     }
 
+    // Validate file upload
+    const validation = validateFileUpload(image)
+    if (!validation.isValid) {
+      return NextResponse.json({ error: validation.error }, { status: 400 })
+    }
+
     // Parse brew data if provided
     let brewData = null
     if (brewDataString) {
       try {
         brewData = JSON.parse(brewDataString)
+        
+        // Basic validation to prevent prototype pollution
+        if (brewData && typeof brewData === 'object') {
+          if ('__proto__' in brewData || 'constructor' in brewData || 'prototype' in brewData) {
+            return NextResponse.json({ error: 'Invalid data format' }, { status: 400 })
+          }
+        }
       } catch (e) {
         console.error('Failed to parse brew data:', e)
+        return NextResponse.json({ error: 'Invalid JSON format' }, { status: 400 })
       }
     }
 

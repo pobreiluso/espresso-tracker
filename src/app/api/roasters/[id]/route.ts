@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { deleteRoaster, getDeletionImpact } from '@/lib/delete'
+import { isValidUUID, getSecureErrorMessage } from '@/lib/security'
 
 export async function DELETE(
   request: NextRequest,
@@ -7,6 +8,15 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params
+    
+    // Validate UUID format
+    if (!isValidUUID(id)) {
+      return NextResponse.json(
+        { success: false, error: 'Invalid ID format' },
+        { status: 400 }
+      )
+    }
+    
     const result = await deleteRoaster(id)
     
     if (result.success) {
@@ -20,7 +30,7 @@ export async function DELETE(
   } catch (error) {
     console.error('Error in DELETE /api/roasters/[id]:', error)
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: getSecureErrorMessage(error) },
       { status: 500 }
     )
   }
@@ -36,6 +46,15 @@ export async function GET(
   if (action === 'impact') {
     try {
       const { id } = await params
+      
+      // Validate UUID format
+      if (!isValidUUID(id)) {
+        return NextResponse.json(
+          { success: false, error: 'Invalid ID format' },
+          { status: 400 }
+        )
+      }
+      
       const result = await getDeletionImpact('roaster', id)
       
       if (result.success) {
@@ -49,7 +68,7 @@ export async function GET(
     } catch (error) {
       console.error('Error getting roaster deletion impact:', error)
       return NextResponse.json(
-        { success: false, error: 'Internal server error' },
+        { success: false, error: getSecureErrorMessage(error) },
         { status: 500 }
       )
     }
