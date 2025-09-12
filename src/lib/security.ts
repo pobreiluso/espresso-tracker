@@ -138,6 +138,56 @@ export function validateEnvironmentVariables(): { isValid: boolean; missingVars:
 }
 
 /**
+ * CSRF token validation
+ */
+export function validateCSRFToken(token: string | null, sessionToken: string): boolean {
+  if (!token || !sessionToken) return false
+  
+  try {
+    // Simple CSRF validation - should be replaced with proper implementation
+    const expected = crypto.createHmac('sha256', sessionToken).update('csrf').digest('hex')
+    return crypto.timingSafeEqual(Buffer.from(token, 'hex'), Buffer.from(expected, 'hex'))
+  } catch {
+    return false
+  }
+}
+
+/**
+ * Generate CSRF token
+ */
+export function generateCSRFToken(sessionToken: string): string {
+  return crypto.createHmac('sha256', sessionToken).update('csrf').digest('hex')
+}
+
+/**
+ * Content Security Policy header value
+ */
+export function getCSPHeader(): string {
+  const isDevelopment = process.env.NODE_ENV === 'development'
+  
+  const policies = [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-eval' 'unsafe-inline'", // Relaxed for Next.js
+    "style-src 'self' 'unsafe-inline'",
+    "img-src 'self' data: blob: https://*.supabase.co",
+    "font-src 'self'",
+    "connect-src 'self' https://*.supabase.co https://api.openai.com",
+    "media-src 'self'",
+    "object-src 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "frame-ancestors 'none'",
+    "upgrade-insecure-requests"
+  ]
+  
+  if (isDevelopment) {
+    policies.push("connect-src 'self' ws: wss: https://*.supabase.co https://api.openai.com http://127.0.0.1:*")
+  }
+  
+  return policies.join('; ')
+}
+
+/**
  * Secure error message that doesn't leak sensitive information
  */
 export function getSecureErrorMessage(error: unknown): string {
@@ -147,4 +197,25 @@ export function getSecureErrorMessage(error: unknown): string {
   
   // In production, return generic error messages to avoid information disclosure
   return 'An error occurred while processing your request'
+}
+
+/**
+ * Validate and sanitize JSON input to prevent prototype pollution
+ */
+export function safeJSONParse<T = any>(jsonString: string): T | null {
+  try {
+    const parsed = JSON.parse(jsonString)
+    
+    // Basic prototype pollution check
+    if (parsed && typeof parsed === 'object') {
+      if ('__proto__' in parsed || 'constructor' in parsed || 'prototype' in parsed) {
+        throw new Error('Potential prototype pollution detected')
+      }
+    }
+    
+    return parsed
+  } catch (error) {
+    console.error('JSON parsing error:', error)
+    return null
+  }
 }

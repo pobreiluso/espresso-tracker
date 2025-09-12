@@ -33,8 +33,16 @@ export async function POST(request: NextRequest) {
     if (brewDataString) {
       try {
         brewData = JSON.parse(brewDataString)
+        
+        // Basic validation to prevent prototype pollution
+        if (brewData && typeof brewData === 'object') {
+          if ('__proto__' in brewData || 'constructor' in brewData || 'prototype' in brewData) {
+            return NextResponse.json({ error: 'Invalid data format' }, { status: 400 })
+          }
+        }
       } catch (e) {
         console.error('Failed to parse brew data:', e)
+        return NextResponse.json({ error: 'Invalid JSON format' }, { status: 400 })
       }
     }
 
